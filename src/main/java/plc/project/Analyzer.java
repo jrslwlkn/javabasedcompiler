@@ -86,18 +86,15 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 scope = new Scope(scope);
                 visit(statement);
                 if (statement instanceof Ast.Stmt.Return) {
-                    retTypeProvided = ((Ast.Stmt.Return) statement).getValue().getType();
+                    ((Ast.Stmt.Return) statement).getValue().getType().getScope().defineVariable("!ret", "!ret", ast.getFunction().getReturnType(), Environment.NIL);
                 }
+                visit(statement);
             }
         } finally {
             scope = scope.getParent();
         }
 
-
-        if (!retType.equals(retTypeProvided)) {
-            throw new RuntimeException("Return type does not match the type of the return value.");
-        }
-
+        ast.setFunction(scope.lookupFunction(ast.getName(), ast.getParameters().size()));
         return null;
     }
 
@@ -216,7 +213,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Environment.Type providedType = ast.getValue().getType().getScope().lookupVariable("!ret").getType();
+        visit(ast.getValue());
+        requireType(ast.getValue().getType(), providedType);
+        return null;
     }
 
     @Override
