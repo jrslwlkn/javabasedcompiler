@@ -267,6 +267,8 @@ public final class Generator implements Ast.Visitor<Void> {
             writer.write("'");
             writer.write((Character) value);
             writer.write("'");
+        } else if (value == null) {
+            writer.write("null");
         } else {
             writer.write(value.toString());
         }

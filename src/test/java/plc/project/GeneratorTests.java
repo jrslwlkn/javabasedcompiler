@@ -650,6 +650,10 @@ public class GeneratorTests {
                 Arguments.of("Char",
                         init(new Ast.Expr.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER)),
                         "'c'"
+                ),
+                Arguments.of("Nil",
+                        init(new Ast.Expr.Literal(null), ast -> ast.setType(Environment.Type.NIL)),
+                        "null"
                 )
         );
     }
