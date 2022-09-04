@@ -143,7 +143,14 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getExpression() instanceof Ast.Expr.Binary)) {
+            throw new RuntimeException("Contained expression is not Binary.");
+        }
+
+        visit(ast.getExpression());
+        ast.setType(ast.getExpression().getType());
+
+        return null;
     }
 
     @Override
