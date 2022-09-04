@@ -44,7 +44,26 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!ast.getTypeName().isPresent() && !ast.getValue().isPresent()) {
+            throw new RuntimeException("Declaration specifies neither type nor value.");
+        }
+
+        Environment.Type type = null;
+        if (ast.getTypeName().isPresent()) {
+            type = Environment.getType(ast.getTypeName().get());
+        }
+        if (ast.getValue().isPresent()) {
+            visit(ast.getValue().get());
+
+            if (type == null) {
+                type = ast.getValue().get().getType();
+            }
+
+            requireAssignable(type, ast.getValue().get().getType());
+        }
+
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL));
+        return null;
     }
 
     @Override
