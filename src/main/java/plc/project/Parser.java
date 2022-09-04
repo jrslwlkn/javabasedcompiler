@@ -35,17 +35,12 @@ public final class Parser {
         List<Ast.Method> methods = new ArrayList<>();
 
         while (tokens.has(0)) {
-            if (peek("LET")) {
+            if (match("LET")) {
                 fields.add(parseField());
-            } else if (peek("DEF")) {
+            } else if (match("DEF")) {
                 methods.add(parseMethod());
-            } else if (peek("")) { // todo: not sure if this is correct
-                match("");
             } else {
-                throw new ParseException("Unexpected token: "
-                        + getPeekedLiteral()
-                        + ". Expected: LET or DEF.",
-                        tokens.get(0).getIndex());
+                throw new ParseException("Expected: `LET` or `DEF`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
             }
         }
 
@@ -57,37 +52,20 @@ public final class Parser {
      * next tokens start a field, aka {@code LET}.
      */
     public Ast.Field parseField() throws ParseException {
-        match("LET"); // LET x = 42;
-
-        String name;
-        Ast.Expr value = null;
-
-        try {
-            name = getPeekedLiteral();
-            if (!match(Token.Type.IDENTIFIER)) {
-                throw new ParseException("Unexpected token: "
-                        + getPeekedLiteral()
-                        + ". Expected: Identifier.",
-                        getPeekedIndex());
-            }
-            if (match("=")) {
-                value = parseExpression();
-            }
-            if (!match(";")) {
-                throw new ParseException("Unexpected token: "
-                        + getPeekedLiteral()
-                        + ". Expected: ;.",
-                        getPeekedIndex());
-            }
-        } catch (ParseException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ParseException("Unexpected token: "
-                    + getPeekedLiteral(),
-                    getPeekedIndex());
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        return new Ast.Field(name, value == null ? Optional.empty() : Optional.ofNullable(value));
+        String name = getMatchedLiteral();
+        Ast.Expr value = null;
+        if (match("=")) {
+            value = parseExpression();
+        }
+        if (!match(";")) {
+            throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        return new Ast.Field(name, value == null ? Optional.empty() : Optional.of(value));
     }
 
     /**
@@ -95,40 +73,32 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Method parseMethod() throws ParseException {
-        match("DEF"); // DEF func(a, b, c) DO LET x = 42; END
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
 
-        String name;
-        List<String> parameters;
-        List<Ast.Stmt> statements;
+        String name = getMatchedLiteral();
 
-        try {
-            name = getPeekedLiteral();
-            if (!match(Token.Type.IDENTIFIER, "(")) {
-                throw new ParseException("Unexpected token: "
-                        + getPeekedLiteral()
-                        + ". Expected: Identifier followed by (.",
-                        getPeekedIndex());
-            }
-            parameters = getCurrentParameters();
-            if (!match(")", "DO")) {
-                throw new ParseException("Unexpected token: "
-                        + getPeekedLiteral()
-                        + ". Expected: ).",
-                        getPeekedIndex());
-            }
-            statements = getCurrentStatements();
-            if (!match("END")) {
-                throw new ParseException("Unexpected token: "
-                        + getPeekedLiteral()
-                        + ". Expected: END.",
-                        getPeekedIndex());
-            }
-        } catch (ParseException e) {
-            throw e;
-        } catch (Exception e) {
-            throw new ParseException("Unexpected token: "
-                    + getPeekedLiteral(),
-                    getPeekedIndex());
+        if (!match("(")) {
+            throw new ParseException("Expected: `(`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        List<String> parameters = getPeekedParameters();
+
+        if (!match(")")) {
+            throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+        if (!match("DO")) {
+            throw new ParseException("Expected: `DO`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        List<Ast.Stmt> statements = new ArrayList<>();
+        while (!peek("END")) {
+            statements.add(parseStatement());
+        }
+
+        if (!match("END")) {
+            throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
         return new Ast.Method(name, parameters, statements);
@@ -158,7 +128,30 @@ public final class Parser {
      * {@code IF}.
      */
     public Ast.Stmt.If parseIfStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr condition = parseExpression();
+
+        if (!match("DO")) {
+            throw new ParseException("Expected: `DO`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        List<Ast.Stmt> thenStatements = new ArrayList<>();
+        while (!peek("ELSE") && !peek("END")) {
+            thenStatements.add(parseStatement());
+        }
+
+        List<Ast.Stmt> elseStatements = new ArrayList<>();
+        if (match("ELSE")) {
+            while (!peek("END")) {
+                elseStatements.add(parseStatement());
+            }
+        }
+
+        if (!match("END")) {
+            // todo: not sure if this is right
+            throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        return new Ast.Stmt.If(condition, thenStatements, elseStatements);
     }
 
     /**
@@ -167,7 +160,32 @@ public final class Parser {
      * {@code FOR}.
      */
     public Ast.Stmt.For parseForStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        String name = getMatchedLiteral();
+
+        if (!match("IN")) {
+            throw new ParseException("Expected: `IN`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        Ast.Expr value = parseExpression();
+        if (!match("DO")) {
+            throw new ParseException("Expected: `DO`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        List<Ast.Stmt> statements = new ArrayList<>();
+        while (!peek("END")) {
+            statements.add(parseStatement());
+        }
+
+        if (!match("END")) {
+            // todo: not sure if this is right
+            throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        return new Ast.Stmt.For(name, value, statements);
     }
 
     /**
@@ -176,7 +194,21 @@ public final class Parser {
      * {@code WHILE}.
      */
     public Ast.Stmt.While parseWhileStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr condition = parseExpression();
+        List<Ast.Stmt> statements = new ArrayList<>();
+
+        if (!match("DO")) {
+            throw new ParseException("Expected: `DO`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+        while (!peek("END")) {
+            statements.add(parseStatement());
+        }
+        if (!match("END")) {
+            // todo: not sure if this is right
+            throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        return new Ast.Stmt.While(condition, statements);
     }
 
     /**
@@ -185,7 +217,7 @@ public final class Parser {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return new Ast.Stmt.Return(parseExpression());
     }
 
     /**
@@ -301,7 +333,7 @@ public final class Parser {
             match(Token.Type.IDENTIFIER);
             String name = getMatchedLiteral();
             match("(");
-            Ast.Expr expression = new Ast.Expr.Function(Optional.empty(), name, getPeekedArguments()); // fixme: not getCurrentArguments!!!
+            Ast.Expr expression = new Ast.Expr.Function(Optional.empty(), name, getPeekedArguments());
 
             if (!match(")")) {
                 throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
@@ -313,9 +345,7 @@ public final class Parser {
             return new Ast.Expr.Access(Optional.empty(), getMatchedLiteral());
 
         } else {
-            throw new ParseException("Unexpected token: "
-                    + getPeekedLiteral(),
-                    getPeekedIndex());
+            throw new ParseException("Unexpected token: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
     }
 
@@ -335,12 +365,6 @@ public final class Parser {
     }
 
     private Ast.Expr parseExpressionAfterDot(Ast.Expr receiver) {
-        // foo.bar().baz.func() // todo: is `foo.bar().baz()` the receiver ?
-        // foo.bar.baz.func(a, b) ---> tokens: [`foo`,  `.`, `bar`, `.`, `baz`, `.`, `func(a, b)`]
-        // receiver: foo.bar.baz  // todo: not sure if this is right
-        // name: func
-        // arguments: [a, b]
-
         Ast.Expr currentExpression;
 
         if (peek(Token.Type.IDENTIFIER, "(")) {
@@ -351,7 +375,7 @@ public final class Parser {
             List<Ast.Expr> arguments = getPeekedArguments();
 
             if (!match(")")) {
-                throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex()); // expected )
+                throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
             }
 
             currentExpression = new Ast.Expr.Function(Optional.of(receiver), name, arguments);
@@ -360,7 +384,7 @@ public final class Parser {
             currentExpression = new Ast.Expr.Access(Optional.of(receiver), getPeekedLiteral());
         } else {
             // not a Ast.Expr.Function or Ast.Expr.Access
-            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex()); // expected Identifier
+            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
         if (match(".")) {
@@ -377,10 +401,7 @@ public final class Parser {
         Ast.Expr expression = parseExpression();
 
         if (!match(")")) { // fixme: make error messages consistent
-            throw new ParseException("Unexpected token: "
-                    + getPeekedLiteral()
-                    + ". Expected: ).",
-                    getPeekedIndex());
+            throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
         return new Ast.Expr.Group(expression);
@@ -416,43 +437,11 @@ public final class Parser {
         return getCleanedStringValue(rawValue).charAt(0);
     }
 
-    private List<Ast.Stmt> getCurrentStatements() {
-        List<Ast.Stmt> statements = new ArrayList<>();
-
-        while (isStatementAhead()) {
-            statements.add(parseStatement());
-        }
-
-        return statements;
-    }
-
-    private boolean isStatementAhead() {
-        return peek("LET")
-                || peek("IF")
-                || peek("FOR")
-                || peek("WHILE")
-                || peek("RETURN")
-                || isExpressionAhead();
-    }
-
-    private boolean isExpressionAhead() {
-        return peek("NIL")
-                || peek("FALSE")
-                || peek("TRUE")
-                || peek("(")
-                || peek(Token.Type.CHARACTER)
-                || peek(Token.Type.DECIMAL)
-                || peek(Token.Type.IDENTIFIER)
-                || peek(Token.Type.STRING)
-                || peek(Token.Type.IDENTIFIER);
-    }
-
-    private List<String> getCurrentParameters() {
+    private List<String> getPeekedParameters() {
         List<String> parameters = new ArrayList<>();
 
-        while (peek(Token.Type.IDENTIFIER)) {
-            parameters.add(getPeekedLiteral());
-            match(Token.Type.IDENTIFIER);
+        while (match(Token.Type.IDENTIFIER)) {
+            parameters.add(getMatchedLiteral());
 
             if (!match(",")) {
                 break;
