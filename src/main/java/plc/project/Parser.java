@@ -1,16 +1,17 @@
 package plc.project;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
  * into a structured representation of the program, called the Abstract Syntax
  * Tree (AST).
- *
+ * <p>
  * The parser has a similar architecture to the lexer, just with {@link Token}s
  * instead of characters. As before, {@link #peek(Object...)} and {@link
  * #match(Object...)} are helpers to make the implementation easier.
- *
+ * <p>
  * This type of parser is called <em>recursive descent</em>. Each rule in our
  * grammar will have it's own function, and reference to other rules correspond
  * to calling that functions.
@@ -27,7 +28,25 @@ public final class Parser {
      * Parses the {@code source} rule.
      */
     public Ast.Source parseSource() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        List<Ast.Field> fields = new ArrayList<>();
+        List<Ast.Method> methods = new ArrayList<>();
+
+        while (tokens.has(0)) {
+            if (peek("LET")) {
+                fields.add(parseField());
+            } else if (peek("DEF")) {
+                methods.add(parseMethod());
+            } else if (peek("")) { // todo: not sure if this is correct
+                match("");
+            } else {
+                throw new ParseException("Unexpected token: "
+                        + tokens.get(0).getLiteral()
+                        + ". Expected: LET or DEF.",
+                        tokens.get(0).getIndex());
+            }
+        }
+
+        return new Ast.Source(fields, methods);
     }
 
     /**
@@ -35,7 +54,37 @@ public final class Parser {
      * next tokens start a field, aka {@code LET}.
      */
     public Ast.Field parseField() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("LET"); // LET x = 42;
+
+        String name;
+        Ast.Expr value = null;
+
+        try {
+            name = getCurrentLiteral();
+            if (!match(Token.Type.IDENTIFIER)) {
+                throw new ParseException("Unexpected token: "
+                        + tokens.get(0).getLiteral()
+                        + ". Expected: Identifier.",
+                        tokens.get(0).getIndex());
+            }
+            if (match("=")) {
+                value = parseExpression();
+            }
+            if (!match(";")) {
+                throw new ParseException("Unexpected token: "
+                        + tokens.get(0).getLiteral()
+                        + ". Expected: ;.",
+                        tokens.get(0).getIndex());
+            }
+        } catch (ParseException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ParseException("Unexpected token: "
+                    + tokens.get(0).getLiteral(),
+                    tokens.get(0).getIndex());
+        }
+
+        return new Ast.Field(name, (value == null ? null : java.util.Optional.of(value)));
     }
 
     /**
@@ -43,7 +92,43 @@ public final class Parser {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Method parseMethod() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        match("DEF"); // DEF func(a, b, c) DO LET x = 42; END
+
+        String name;
+        List<String> parameters;
+        List<Ast.Stmt> statements;
+
+        try {
+            name = getCurrentLiteral();
+            if (!match(Token.Type.IDENTIFIER, "(")) {
+                throw new ParseException("Unexpected token: "
+                        + tokens.get(0).getLiteral()
+                        + ". Expected: Identifier followed by (.",
+                        tokens.get(0).getIndex());
+            }
+            parameters = getCurrentParameters();
+            if (!match(")", "DO")) {
+                throw new ParseException("Unexpected token: "
+                        + tokens.get(0).getLiteral()
+                        + ". Expected: ).",
+                        tokens.get(0).getIndex());
+            }
+            statements = getCurrentStatements();
+            if (!match("END")) {
+                throw new ParseException("Unexpected token: "
+                        + tokens.get(0).getLiteral()
+                        + ". Expected: END.",
+                        tokens.get(0).getIndex());
+            }
+        } catch (ParseException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ParseException("Unexpected token: "
+                    + tokens.get(0).getLiteral(),
+                    tokens.get(0).getIndex());
+        }
+
+        return new Ast.Method(name, parameters, statements);
     }
 
     /**
@@ -152,13 +237,63 @@ public final class Parser {
         throw new UnsupportedOperationException(); //TODO
     }
 
+    private String getCurrentLiteral() {
+        // todo: think whether it should match, because getParameters() matches
+        return tokens.get(0).getLiteral();
+    }
+
+    private List<Ast.Stmt> getCurrentStatements() {
+        List<Ast.Stmt> statements = new ArrayList<>();
+
+        while (isStatementAhead()) {
+            statements.add(parseStatement());
+        }
+
+        return statements;
+    }
+
+    private boolean isStatementAhead() {
+        return peek("LET")
+                || peek("IF")
+                || peek("FOR")
+                || peek("WHILE")
+                || peek("RETURN")
+                || isExpressionAhead();
+    }
+
+    private boolean isExpressionAhead() {
+        return peek("NIL")
+                || peek("FALSE")
+                || peek("TRUE")
+                || peek("(")
+                || peek(Token.Type.CHARACTER)
+                || peek(Token.Type.DECIMAL)
+                || peek(Token.Type.IDENTIFIER)
+                || peek(Token.Type.STRING)
+                || peek(Token.Type.IDENTIFIER);
+    }
+
+    private List<String> getCurrentParameters() {
+        List<String> parameters = new ArrayList<>();
+
+        while (peek(Token.Type.IDENTIFIER)) {
+            parameters.add(getCurrentLiteral());
+            match(Token.Type.IDENTIFIER);
+            if (!match(",")) {
+                break;
+            }
+        }
+
+        return parameters;
+    }
+
     /**
      * As in the lexer, returns {@code true} if the current sequence of tokens
      * matches the given patterns. Unlike the lexer, the pattern is not a regex;
      * instead it is either a {@link Token.Type}, which matches if the token's
      * type is the same, or a {@link String}, which matches if the token's
      * literal is the same.
-     *
+     * <p>
      * In other words, {@code Token(IDENTIFIER, "literal")} is matched by both
      * {@code peek(Token.Type.IDENTIFIER)} and {@code peek("literal")}.
      */
