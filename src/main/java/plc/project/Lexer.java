@@ -113,10 +113,18 @@ public final class Lexer {
     public Token lexCharacter() throws ParseException {
         match(characterBoundary);
         if (!match(escapeStart, escapeEnd, characterBoundary) && !match(characterMatch, characterBoundary)) {
-            if (peek(escapeEnd)) {
-                throw new ParseException("Character literal contains unescaped token (" + chars.get(0) + "). Did you forget the backslash (\\) before it?", chars.index);
+            char c = chars.has(0) ? chars.get(0) : chars.get(-1);
+            if (peek(escapeEnd)) { // got the end of the escape char but the char is actually not escaped
+                throw new ParseException("Character literal contains unescaped token ("
+                        + c
+                        + "). Did you forget the backslash (\\) before it?",
+                        chars.index);
             }
-            throw new ParseException("Character literal is not terminated. Did you forget the closing single quote (') after \"" + chars.get(0) + "\"?", chars.index + 1);
+            throw new ParseException("Character literal is not terminated. "
+                    + "Did you forget the closing single quote (') after \""
+                    + c
+                    + "\"?",
+                    chars.index + 1);
         }
 
         return chars.emit(Token.Type.CHARACTER);
@@ -130,11 +138,18 @@ public final class Lexer {
         }
 
         if (peek(escapeStart) && !peek(escapeStart, escapeEnd)) {
-            throw new ParseException("String literal contains unescaped token (" + chars.get(0) + "). Did you forget the backslash (\\) before it?", chars.index);
+            throw new ParseException("String literal contains unescaped token ("
+                    + chars.get(0)
+                    + "). Did you forget the backslash (\\) before it?",
+                    chars.index);
         }
 
         if (!match(stringBoundary)) {
-            throw new ParseException("String literal is not terminated. Did you forget the closing double quote (\") after \"" + chars.get(-1) + "\"?", chars.index);
+            throw new ParseException("String literal is not terminated. "
+                    + "Did you forget the closing double quote (\") after \""
+                    + chars.get(-1)
+                    + "\"?",
+                    chars.index);
         }
 
         return chars.emit(Token.Type.STRING);
