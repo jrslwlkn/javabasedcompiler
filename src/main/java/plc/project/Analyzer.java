@@ -29,7 +29,13 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Field ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getValue().isPresent()) {
+            visit(ast.getValue().get());
+            requireAssignable(Environment.getType(ast.getName()), ast.getValue().get().getType());
+        }
+
+        ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), Environment.getType(ast.getName()), Environment.NIL));
+        return null;
     }
 
     @Override
@@ -39,7 +45,12 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getExpression() instanceof Ast.Expr.Function)) {
+            throw new RuntimeException("Expression statement is not a Function.");
+        }
+
+        visit(ast.getExpression());
+        return null;
     }
 
     @Override
@@ -68,17 +79,66 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (!(ast.getReceiver() instanceof Ast.Expr.Access)) {
+            throw new RuntimeException("Receiver is not an Access expression.");
+        }
+
+        visit(ast.getReceiver());
+        visit(ast.getValue());
+        requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
+
+        // ((Ast.Expr.Access) ast.getReceiver()).setVariable();
+        return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getThenStatements().isEmpty()) {
+            throw new RuntimeException("If statement does not include any Then statements.");
+        }
+
+        visit(ast.getCondition());
+        requireType(Environment.Type.BOOLEAN, ast.getCondition().getType());
+
+        try {
+            scope = new Scope(scope);
+            for (Ast.Stmt statement : ast.getThenStatements()) {
+                visit(statement);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+
+        try {
+            scope = new Scope(scope);
+            for (Ast.Stmt statement : ast.getElseStatements()) {
+                visit(statement);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+
+        return null;
     }
 
     @Override
     public Void visit(Ast.Stmt.For ast) {
-        throw new UnsupportedOperationException();  // TODO
+        requireType(Environment.Type.INTEGER_ITERABLE, ast.getValue().getType());
+        if (ast.getStatements().isEmpty()) {
+            throw new RuntimeException("Then statements are empty.");
+        }
+
+        try {
+            scope = new Scope(scope);
+            scope.defineVariable(ast.getName(), ast.getName(), Environment.Type.INTEGER, Environment.NIL);
+            for (Ast.Stmt statement : ast.getStatements()) {
+                visit(statement);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+
+        return null;
     }
 
     @Override
@@ -206,7 +266,16 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Access ast) {
-        throw new UnsupportedOperationException();  // TODO
+        // foo.bar
+        if (ast.getReceiver().isPresent()) {
+            Ast.Expr.Access receiver = (Ast.Expr.Access) ast.getReceiver().get();
+            visit(receiver);
+            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), null, Environment.NIL));
+        } else {
+            ast.setVariable(scope.lookupVariable(ast.getName()));
+        }
+
+        return null;
     }
 
     @Override

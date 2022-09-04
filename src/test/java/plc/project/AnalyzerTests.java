@@ -115,6 +115,19 @@ public final class AnalyzerTests {
 
     private static Stream<Arguments> testAssignmentStatement() {
         return Stream.of(
+                Arguments.of("Field",
+                        // object.field = 1;
+                        new Ast.Stmt.Assignment(
+                                new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "object")), "field"),
+                                new Ast.Expr.Literal(BigInteger.ONE)
+                        ),
+                        new Ast.Stmt.Assignment(
+                                init(new Ast.Expr.Access(Optional.of(
+                                        init(new Ast.Expr.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, Environment.NIL)))
+                                ), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, Environment.NIL))),
+                                init(new Ast.Expr.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
+                        )
+                ),
                 Arguments.of("Variable",
                         // variable = 1;
                         new Ast.Stmt.Assignment(
@@ -133,19 +146,6 @@ public final class AnalyzerTests {
                                 new Ast.Expr.Literal("string")
                         ),
                         null
-                ),
-                Arguments.of("Field",
-                        // object.field = 1;
-                        new Ast.Stmt.Assignment(
-                                new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "object")), "field"),
-                                new Ast.Expr.Literal(BigInteger.ONE)
-                        ),
-                        new Ast.Stmt.Assignment(
-                                init(new Ast.Expr.Access(Optional.of(
-                                        init(new Ast.Expr.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, Environment.NIL)))
-                                ), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, Environment.NIL))),
-                                init(new Ast.Expr.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                        )
                 )
         );
     }
@@ -307,18 +307,13 @@ public final class AnalyzerTests {
     @MethodSource
     public void testAccessExpression(String test, Ast.Expr.Access ast, Ast.Expr.Access expected) {
         test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, Environment.NIL);
             scope.defineVariable("object", "object", OBJECT_TYPE, Environment.NIL);
+            scope.defineVariable("variable", "variable", Environment.Type.INTEGER, Environment.NIL);
         }));
     }
 
     private static Stream<Arguments> testAccessExpression() {
         return Stream.of(
-                Arguments.of("Variable",
-                        // variable
-                        new Ast.Expr.Access(Optional.empty(), "variable"),
-                        init(new Ast.Expr.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, Environment.NIL)))
-                ),
                 Arguments.of("Field",
                         // object.field
                         new Ast.Expr.Access(Optional.of(
@@ -327,6 +322,11 @@ public final class AnalyzerTests {
                         init(new Ast.Expr.Access(Optional.of(
                                 init(new Ast.Expr.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, Environment.NIL)))
                         ), "field"), ast -> ast.setVariable(new Environment.Variable("field", "field", Environment.Type.INTEGER, Environment.NIL)))
+                ),
+                Arguments.of("Variable",
+                        // variable
+                        new Ast.Expr.Access(Optional.empty(), "variable"),
+                        init(new Ast.Expr.Access(Optional.empty(), "variable"), ast -> ast.setVariable(new Environment.Variable("variable", "variable", Environment.Type.INTEGER, Environment.NIL)))
                 )
         );
     }
