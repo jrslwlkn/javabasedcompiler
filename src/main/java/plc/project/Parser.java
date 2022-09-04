@@ -40,7 +40,7 @@ public final class Parser {
                 match("");
             } else {
                 throw new ParseException("Unexpected token: "
-                        + tokens.get(0).getLiteral()
+                        + getCurrentLiteral()
                         + ". Expected: LET or DEF.",
                         tokens.get(0).getIndex());
             }
@@ -63,25 +63,25 @@ public final class Parser {
             name = getCurrentLiteral();
             if (!match(Token.Type.IDENTIFIER)) {
                 throw new ParseException("Unexpected token: "
-                        + tokens.get(0).getLiteral()
+                        + getCurrentLiteral()
                         + ". Expected: Identifier.",
-                        tokens.get(0).getIndex());
+                        getCurrentIndex());
             }
             if (match("=")) {
                 value = parseExpression();
             }
             if (!match(";")) {
                 throw new ParseException("Unexpected token: "
-                        + tokens.get(0).getLiteral()
+                        + getCurrentLiteral()
                         + ". Expected: ;.",
-                        tokens.get(0).getIndex());
+                        getCurrentIndex());
             }
         } catch (ParseException e) {
             throw e;
         } catch (Exception e) {
             throw new ParseException("Unexpected token: "
-                    + tokens.get(0).getLiteral(),
-                    tokens.get(0).getIndex());
+                    + getCurrentLiteral(),
+                    getCurrentIndex());
         }
 
         return new Ast.Field(name, (value == null ? null : java.util.Optional.of(value)));
@@ -102,30 +102,30 @@ public final class Parser {
             name = getCurrentLiteral();
             if (!match(Token.Type.IDENTIFIER, "(")) {
                 throw new ParseException("Unexpected token: "
-                        + tokens.get(0).getLiteral()
+                        + getCurrentLiteral()
                         + ". Expected: Identifier followed by (.",
-                        tokens.get(0).getIndex());
+                        getCurrentIndex());
             }
             parameters = getCurrentParameters();
             if (!match(")", "DO")) {
                 throw new ParseException("Unexpected token: "
-                        + tokens.get(0).getLiteral()
+                        + getCurrentLiteral()
                         + ". Expected: ).",
-                        tokens.get(0).getIndex());
+                        getCurrentIndex());
             }
             statements = getCurrentStatements();
             if (!match("END")) {
                 throw new ParseException("Unexpected token: "
-                        + tokens.get(0).getLiteral()
+                        + getCurrentLiteral()
                         + ". Expected: END.",
-                        tokens.get(0).getIndex());
+                        getCurrentIndex());
             }
         } catch (ParseException e) {
             throw e;
         } catch (Exception e) {
             throw new ParseException("Unexpected token: "
-                    + tokens.get(0).getLiteral(),
-                    tokens.get(0).getIndex());
+                    + getCurrentLiteral(),
+                    getCurrentIndex());
         }
 
         return new Ast.Method(name, parameters, statements);
@@ -240,6 +240,10 @@ public final class Parser {
     private String getCurrentLiteral() {
         // todo: think whether it should match, because getParameters() matches
         return tokens.get(0).getLiteral();
+    }
+
+    private int getCurrentIndex() {
+        return tokens.get(0).getIndex();
     }
 
     private List<Ast.Stmt> getCurrentStatements() {
