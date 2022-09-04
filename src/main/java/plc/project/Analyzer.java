@@ -86,8 +86,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(ast.getReceiver());
         visit(ast.getValue());
         requireAssignable(ast.getReceiver().getType(), ast.getValue().getType());
-
-        // ((Ast.Expr.Access) ast.getReceiver()).setVariable();
         return null;
     }
 
@@ -266,7 +264,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Access ast) {
-        // foo.bar
         if (ast.getReceiver().isPresent()) {
             Ast.Expr.Access receiver = (Ast.Expr.Access) ast.getReceiver().get();
             visit(receiver);
@@ -280,7 +277,15 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Function ast) {
-        throw new UnsupportedOperationException();  // TODO
+        if (ast.getReceiver().isPresent()) {
+            Ast.Expr.Access receiver = (Ast.Expr.Access) ast.getReceiver().get();
+            visit(receiver);
+            ast.setFunction(receiver.getType().getScope().lookupFunction(ast.getName(), ast.getArguments().size() + 1));
+        } else {
+            ast.setFunction(scope.lookupFunction(ast.getName(), ast.getArguments().size()));
+        }
+
+        return null;
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
