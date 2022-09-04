@@ -137,6 +137,25 @@ final class ParserTests {
 
     private static Stream<Arguments> testAssignmentStatement() {
         return Stream.of(
+                Arguments.of("Expression Assignment to Expression",
+                        Arrays.asList(
+                                //x = x + field;
+                                new Token(Token.Type.IDENTIFIER, "x", 0),
+                                new Token(Token.Type.OPERATOR, "=", 2),
+                                new Token(Token.Type.IDENTIFIER, "x", 4),
+                                new Token(Token.Type.OPERATOR, "+", 6),
+                                new Token(Token.Type.IDENTIFIER, "field", 8),
+                                new Token(Token.Type.OPERATOR, ";", 9)
+                        ),
+                        new Ast.Stmt.Assignment(
+                                new Ast.Expr.Access(Optional.empty(), "x"),
+                                new Ast.Expr.Binary(
+                                        "+",
+                                        new Ast.Expr.Access(Optional.empty(), "x"),
+                                        new Ast.Expr.Access(Optional.empty(), "field")
+                                )
+                        )
+                ),
                 Arguments.of("Assignment",
                         Arrays.asList(
                                 //name = value;
@@ -149,6 +168,23 @@ final class ParserTests {
                                 new Ast.Expr.Access(Optional.empty(), "name"),
                                 new Ast.Expr.Access(Optional.empty(), "value")
                         )
+<<<<<<< HEAD:src/test/java/plc/project/ParserExpressionTests.java
+=======
+                ),
+
+                Arguments.of("Expression Assignment",
+                        Arrays.asList(
+                                //x.y = z;
+                                new Token(Token.Type.IDENTIFIER, "x.y", 0),
+                                new Token(Token.Type.OPERATOR, "=", 4),
+                                new Token(Token.Type.IDENTIFIER, "z", 6),
+                                new Token(Token.Type.OPERATOR, ";", 7)
+                        ),
+                        new Ast.Stmt.Assignment(
+                                new Ast.Expr.Access(Optional.empty(), "x.y"),
+                                new Ast.Expr.Access(Optional.empty(), "z")
+                        )
+>>>>>>> 2020f74 (Fix failing test case):src/test/java/plc/project/ParserTests.java
                 )
         );
     }
