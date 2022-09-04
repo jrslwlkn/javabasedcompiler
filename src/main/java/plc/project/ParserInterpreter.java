@@ -271,7 +271,13 @@ public final class ParserInterpreter {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
-        return new Ast.Stmt.Return(parseExpression());
+        Ast.Stmt.Return ret = new Ast.Stmt.Return(parseExpression());
+
+        if (!match(";")) {
+            throw new ParseException("Missing `;` in Return statement.", getPeekedIndex());
+        }
+
+        return ret;
     }
 
     /**
