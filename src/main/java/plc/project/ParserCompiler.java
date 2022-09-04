@@ -183,21 +183,24 @@ public final class ParserCompiler {
 
         String name = getMatchedLiteral();
 
-        Ast.Expr expression = null;
-        if (match("=")) {
-            expression = parseExpression();
+        Optional<String> type = Optional.empty();
+        if (match(":")) {
+            if (!match(Token.Type.IDENTIFIER)) {
+                throw new ParseException("Expected: Type declaration, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+            }
+            type = Optional.of(getMatchedLiteral());
         }
 
-        Optional<String> type = Optional.empty();
-        if (match(":", Token.Type.IDENTIFIER)) {
-            type = Optional.of(getMatchedLiteral());
+        Optional<Ast.Expr> expression = Optional.empty();
+        if (match("=")) {
+            expression = Optional.of(parseExpression());
         }
 
         if (!match(";")) {
             throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        return new Ast.Stmt.Declaration(name, type, expression == null ? Optional.empty() : Optional.of(expression));
+        return new Ast.Stmt.Declaration(name, type, expression);
     }
 
     /**
