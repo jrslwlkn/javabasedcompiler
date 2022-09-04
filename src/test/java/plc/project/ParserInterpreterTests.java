@@ -368,10 +368,6 @@ final class ParserInterpreterTests {
                                 new Ast.Expr.Access(Optional.empty(), "name"),
                                 new Ast.Expr.Access(Optional.empty(), "value")
                         )
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD:src/test/java/plc/project/ParserExpressionTests.java
-=======
                 ),
 
                 Arguments.of("Expression Assignment",
@@ -386,10 +382,6 @@ final class ParserInterpreterTests {
                                 new Ast.Expr.Access(Optional.empty(), "x.y"),
                                 new Ast.Expr.Access(Optional.empty(), "z")
                         )
->>>>>>> 2020f74 (Fix failing test case):src/test/java/plc/project/ParserTests.java
-=======
->>>>>>> 6a62219 (Fix last failing test case)
-=======
                 ),
                 Arguments.of("Missing Value Assignment",
                         Arrays.asList(
@@ -399,7 +391,6 @@ final class ParserInterpreterTests {
                                 new Token(Token.Type.OPERATOR, ";", 12)
                         ),
                         null
->>>>>>> b721361 (Add more tests mentioned on the `Parser [Complete] Test Submission`)
                 )
         );
     }

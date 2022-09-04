@@ -27,8 +27,6 @@ public final class AnalyzerTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
-<<<<<<< HEAD
-=======
     public void testField(String test, Ast.Field ast, Ast.Field expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
@@ -50,7 +48,6 @@ public final class AnalyzerTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
->>>>>>> 763844e (Analyzer: Fix failing tests)
     public void testMethod(String test, Ast.Method ast, Ast.Method expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
