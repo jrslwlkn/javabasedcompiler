@@ -176,6 +176,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.For ast) {
+        visit(ast.getValue());
         requireType(Environment.Type.INTEGER_ITERABLE, ast.getValue().getType());
         if (ast.getStatements().isEmpty()) {
             throw new RuntimeException("Then statements are empty.");
