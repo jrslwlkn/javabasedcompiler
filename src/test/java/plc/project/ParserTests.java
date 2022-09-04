@@ -28,6 +28,25 @@ final class ParserTests {
 
     private static Stream<Arguments> testSource() {
         return Stream.of(
+                Arguments.of("Field after method",
+                        Arrays.asList(
+                                //DEF name() DO stmt; END LET x = 5;
+                                new Token(Token.Type.IDENTIFIER, "DEF", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.OPERATOR, ")", 9),
+                                new Token(Token.Type.IDENTIFIER, "DO", 11),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 14),
+                                new Token(Token.Type.OPERATOR, ";", 18),
+                                new Token(Token.Type.IDENTIFIER, "END", 20),
+                                new Token(Token.Type.IDENTIFIER, "LET", 20),
+                                new Token(Token.Type.IDENTIFIER, "x", 20),
+                                new Token(Token.Type.OPERATOR, "=", 20),
+                                new Token(Token.Type.INTEGER, "5", 20),
+                                new Token(Token.Type.OPERATOR, ";", 20)
+                        ),
+                        null
+                ),
                 Arguments.of("Method",
                         Arrays.asList(
                                 //DEF name() DO stmt; END

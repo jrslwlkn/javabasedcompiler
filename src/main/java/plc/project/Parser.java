@@ -34,13 +34,24 @@ public final class Parser {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
 
+        boolean methodsStarted = false;
         while (tokens.has(0)) {
             if (match("LET")) {
+                if (methodsStarted) {
+                    throw new ParseException("Expected: `DEF`, received: `" + getMatchedLiteral() + "`.", getMatchedIndex());
+                }
+
                 fields.add(parseField());
             } else if (match("DEF")) {
+                methodsStarted = true;
                 methods.add(parseMethod());
             } else {
-                throw new ParseException("Expected: `LET` or `DEF`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+                throw new ParseException("Expected: "
+                        + (methodsStarted ? "" : "`LET` or ")
+                        + "`DEF`, received: `"
+                        + getPeekedLiteral()
+                        + "`.",
+                        getPeekedIndex());
             }
         }
 
