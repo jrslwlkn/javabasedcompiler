@@ -28,6 +28,12 @@ public final class Generator implements Ast.Visitor<Void> {
         }
     }
 
+    private void indent() {
+        for (int i = 0; i < indent; i++) {
+            writer.write("    ");
+        }
+    }
+
     @Override
     public Void visit(Ast.Source ast) {
         writer.write("public class Main {");
@@ -39,11 +45,11 @@ public final class Generator implements Ast.Visitor<Void> {
         newline(1);
         writer.write("}");
 
-        indent = 1;
         for (Ast.Field field : ast.getFields()) {
-            newline(indent);
+            newline(1);
             visit(field);
         }
+        indent = 1;
         for (Ast.Method method : ast.getMethods()) {
             newline(0);
             visit(method);
@@ -92,7 +98,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
         indent++;
         for (Ast.Stmt stmt : ast.getStatements()) {
-            newline(indent);
+            newline(0);
             visit(stmt);
         }
         indent--;
@@ -106,6 +112,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Expression ast) {
+        indent();
         visit(ast.getExpression());
         writer.write(";");
 
@@ -135,6 +142,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Assignment ast) {
+        indent();
         visit(ast.getReceiver());
         writer.write(" = ");
         visit(ast.getValue());
@@ -144,28 +152,31 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.If ast) {
+        indent();
         writer.write("if (");
         visit(ast.getCondition());
         writer.write(") {");
+        newline(0);
 
         indent++;
         for (Ast.Stmt stmt : ast.getThenStatements()) {
-            newline(indent);
             visit(stmt);
             newline(0);
         }
         indent--;
+        indent();
         writer.write("}");
 
         if (ast.getElseStatements().size() > 0) {
             writer.write(" else {");
+            newline(0);
             indent++;
             for (Ast.Stmt stmt : ast.getElseStatements()) {
-                newline(indent);
                 visit(stmt);
                 newline(0);
             }
             indent--;
+            indent();
             writer.write("}");
         }
 
@@ -174,7 +185,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.For ast) {
-        newline(indent);
+        indent();
         writer.write("for (int ");
         writer.write(ast.getName());
         writer.write(" : ");
@@ -183,7 +194,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
         indent++;
         for (Ast.Stmt stmt : ast.getStatements()) {
-            newline(indent);
+            newline(0);
             visit(stmt);
         }
         indent--;
@@ -196,14 +207,14 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.While ast) {
-        newline(indent);
+        indent();
         writer.write("while (");
         visit(ast.getCondition());
         writer.write(") {");
 
         indent++;
         for (Ast.Stmt stmt : ast.getStatements()) {
-            newline(indent);
+            newline(0);
             visit(stmt);
         }
         indent--;
@@ -216,6 +227,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
+        indent();
         writer.write("return ");
         visit(ast.getValue());
         writer.write(";");

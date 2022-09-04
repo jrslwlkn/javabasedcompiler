@@ -120,6 +120,120 @@ public class GeneratorTests {
                                 "    stmt2;",
                                 "}"
                         )
+                ),
+                Arguments.of("If and Else with For",
+                        // IF expr DO
+                        //     stmt1;
+                        // ELSE
+                        //     stmt2;
+                        // END
+                        new Ast.Stmt.If(
+                                // condition
+                                init(new Ast.Expr.Access(Optional.empty(), "expr1"), ast -> ast.setVariable(new Environment.Variable("expr1", "expr1", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                // then block
+                                Arrays.asList(
+                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt1"), ast -> ast.setVariable(new Environment.Variable("stmt1", "stmt1", Environment.Type.NIL, Environment.NIL)))),
+
+                                        // first for loop
+                                        new Ast.Stmt.For(
+                                                "expr2",
+
+                                                init(new Ast.Expr.Access(Optional.empty(), "expr2"), ast -> ast.setVariable(new Environment.Variable("expr2", "expr2", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                // for loop statements
+                                                Arrays.asList(
+                                                        // if statement
+                                                        new Ast.Stmt.If(
+                                                                init(new Ast.Expr.Access(Optional.empty(), "expr3"), ast -> ast.setVariable(new Environment.Variable("expr3", "expr3", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                                // then statements
+                                                                Arrays.asList(
+                                                                        // for loop
+                                                                        new Ast.Stmt.For(
+                                                                                "expr4",
+                                                                                init(new Ast.Expr.Access(Optional.empty(), "expr4"), ast -> ast.setVariable(new Environment.Variable("expr4", "expr4", Environment.Type.BOOLEAN, Environment.NIL))),
+                                                                                Arrays.asList(
+                                                                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt2"), ast -> ast.setVariable(new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, Environment.NIL))))
+                                                                                )
+                                                                        )
+                                                                ),
+
+                                                                // else statements
+                                                                Arrays.asList()
+                                                        )
+                                                        , new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt11"), ast -> ast.setVariable(new Environment.Variable("stmt11", "stmt11", Environment.Type.NIL, Environment.NIL))))
+                                                )
+                                        )
+                                ),
+
+                                // else block statements
+                                Arrays.asList(
+                                        new Ast.Stmt.Expression(
+                                                init(new Ast.Expr.Access(Optional.empty(), "stmt3"), ast -> ast.setVariable(new Environment.Variable("stmt3", "stmt3", Environment.Type.NIL, Environment.NIL)))
+                                        ),
+
+                                        new Ast.Stmt.For(
+                                                "expr5",
+
+                                                init(new Ast.Expr.Access(Optional.empty(), "expr5"), ast -> ast.setVariable(new Environment.Variable("expr5", "expr5", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                // for loop statements
+                                                Arrays.asList(
+                                                        // if statement
+                                                        new Ast.Stmt.If(
+                                                                init(new Ast.Expr.Access(Optional.empty(), "expr6"), ast -> ast.setVariable(new Environment.Variable("expr6", "expr6", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                                // then statements
+                                                                Arrays.asList(
+                                                                        // for loop
+                                                                        new Ast.Stmt.For(
+                                                                                "expr7",
+                                                                                init(new Ast.Expr.Access(Optional.empty(), "expr7"), ast -> ast.setVariable(new Environment.Variable("expr7", "expr7", Environment.Type.BOOLEAN, Environment.NIL))),
+                                                                                Arrays.asList(
+                                                                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt4"), ast -> ast.setVariable(new Environment.Variable("stmt4", "stmt4", Environment.Type.NIL, Environment.NIL))))
+                                                                                )
+                                                                        ),
+                                                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt5"), ast -> ast.setVariable(new Environment.Variable("stmt5", "stmt5", Environment.Type.NIL, Environment.NIL))))
+                                                                ),
+
+                                                                // else statements
+                                                                Arrays.asList(
+                                                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt13"), ast -> ast.setVariable(new Environment.Variable("stmt13", "stmt13", Environment.Type.NIL, Environment.NIL))))
+                                                                )
+                                                        ),
+
+                                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt12"), ast -> ast.setVariable(new Environment.Variable("stmt12", "stmt12", Environment.Type.NIL, Environment.NIL))))
+                                                )
+                                        )
+                                )
+                        ),
+                        String.join(System.lineSeparator(),
+                                "if (expr1) {",
+                                "    stmt1;",
+                                "    for (int expr2 : expr2) {",
+                                "        if (expr3) {",
+                                "            for (int expr4 : expr4) {",
+                                "                stmt2;",
+                                "            }",
+                                "        }",
+                                "        stmt11;",
+                                "    }",
+                                "} else {",
+                                "    stmt3;",
+                                "    for (int expr5 : expr5) {",
+                                "        if (expr6) {",
+                                "            for (int expr7 : expr7) {",
+                                "                stmt4;",
+                                "            }",
+                                "            stmt5;",
+                                "        } else {",
+                                "            stmt13;",
+                                "        }",
+                                "        stmt12;",
+                                "    }",
+                                "}"
+                        )
                 )
         );
     }
