@@ -144,6 +144,17 @@ final class ParserTests {
                                 new Token(Token.Type.OPERATOR, ";", 15)
                         ),
                         new Ast.Stmt.Declaration("name", Optional.of(new Ast.Expr.Access(Optional.empty(), "expr")))
+                ),
+                Arguments.of("String Escape Initialization",
+                        Arrays.asList(
+                                //LET name = "\n";
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.CHARACTER, "'\\n'", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Stmt.Declaration("name", Optional.of(new Ast.Expr.Literal('\n')))
                 )
         );
     }

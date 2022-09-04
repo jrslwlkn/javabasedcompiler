@@ -493,12 +493,12 @@ public final class Parser {
 
     private String getCleanedStringValue(String rawValue) {
         String value = rawValue.substring(1, rawValue.length() - 1);
-        return value.replaceAll("\\\\b", "\b")
-                .replaceAll("\\\\n", "\n")
-                .replaceAll("\\\\r", "\r")
-                .replaceAll("\\\\t", "\t")
-                .replaceAll("\\\\", "\\")
-                .replaceAll("\\\\\"", "\"");
+        return value.replace("\\b", "\b")
+                .replace("\\n", "\n")
+                .replace("\\r", "\r")
+                .replace("\\t", "\t")
+                .replace("\\", "\\")
+                .replace("\\\"", "\"");
     }
 
     private Character getCleanedCharValue(String rawValue) {
