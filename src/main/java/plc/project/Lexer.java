@@ -113,17 +113,16 @@ public final class Lexer {
     public Token lexCharacter() throws ParseException {
         match(characterBoundary);
         if (!match(escapeStart, escapeEnd, characterBoundary) && !match(characterMatch, characterBoundary)) {
-            char c = chars.has(0) ? chars.get(0) : chars.get(-1);
-            if (peek(escapeEnd)) { // got the end of the escape char but the char is actually not escaped
-                throw new ParseException("Character literal contains unescaped token ("
-                        + c
-                        + "). Did you forget the backslash (\\) before it?",
-                        chars.index);
+            if (peek(escapeStart)) { // got the start of the escape char but the char is actually not escaped
+                throw new ParseException("Character literal contains illegal token after backslash (\\): '"
+                        + (chars.has(1) && !peek(escapeStart, characterBoundary) ? chars.get(1) : "")
+                        + "'. Possible alternatives: b, n, r, t, ', \", \\.",
+                        chars.index + 1);
             }
             throw new ParseException("Character literal is not terminated. "
-                    + "Did you forget the closing single quote (') after \""
-                    + c
-                    + "\"?",
+                    + "Did you forget the closing single quote (') after '"
+                    + (chars.has(0) ? chars.get(0) : '\0')
+                    + "'?",
                     chars.index + 1);
         }
 
@@ -138,17 +137,17 @@ public final class Lexer {
         }
 
         if (peek(escapeStart) && !peek(escapeStart, escapeEnd)) {
-            throw new ParseException("String literal contains unescaped token ("
-                    + chars.get(0)
-                    + "). Did you forget the backslash (\\) before it?",
-                    chars.index);
+            throw new ParseException("String literal contains illegal token after backslash (\\): '"
+                    + (chars.has(1) ? chars.get(1) : chars.has(0) ? chars.get(0) : "")
+                    + "'. Possible alternatives: b, n, r, t, ', \", \\.",
+                    chars.index + 1);
         }
 
         if (!match(stringBoundary)) {
             throw new ParseException("String literal is not terminated. "
-                    + "Did you forget the closing double quote (\") after \""
-                    + chars.get(-1)
-                    + "\"?",
+                    + "Did you forget the closing double quote (\") after '"
+                    + (chars.has(-1) ? chars.get(-1) : "")
+                    + "'?",
                     chars.index);
         }
 
