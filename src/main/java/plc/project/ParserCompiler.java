@@ -113,7 +113,10 @@ public final class ParserCompiler {
         }
 
         Optional<String> returnType = Optional.empty();
-        if (match(":", Token.Type.IDENTIFIER)) {
+        if (match(":")) {
+            if (!match(Token.Type.IDENTIFIER)) {
+                throw new ParseException("Expected: Type declaration, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+            }
             returnType = Optional.of(getMatchedLiteral());
         }
 
@@ -456,7 +459,10 @@ public final class ParserCompiler {
         while (match(Token.Type.IDENTIFIER)) {
             parameters.add(getMatchedLiteral());
 
-            if (!match(":", Token.Type.IDENTIFIER)) {
+            if (!match(":")) {
+                throw new ParseException("Expected: Type declaration, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+            }
+            if (!match(Token.Type.IDENTIFIER)) {
                 throw new ParseException("Expected: Type declaration, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
             }
             parametersTypes.add(getMatchedLiteral());
