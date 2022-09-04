@@ -142,19 +142,19 @@ public final class ParserCompiler {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Stmt parseStatement() throws ParseException {
-        if (match("LET")) {
+        if (peek("LET")) {
             return parseDeclarationStatement();
 
-        } else if (match("IF")) {
+        } else if (peek("IF")) {
             return parseIfStatement();
 
-        } else if (match("FOR")) {
+        } else if (peek("FOR")) {
             return parseForStatement();
 
-        } else if (match("WHILE")) {
+        } else if (peek("WHILE")) {
             return parseWhileStatement();
 
-        } else if (match("RETURN")) {
+        } else if (peek("RETURN")) {
             return parseReturnStatement();
 
         } else {
@@ -184,6 +184,8 @@ public final class ParserCompiler {
      * statement, aka {@code LET}.
      */
     public Ast.Stmt.Declaration parseDeclarationStatement() throws ParseException {
+        match("LET");
+
         if (!match(Token.Type.IDENTIFIER)) {
             throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
@@ -205,6 +207,8 @@ public final class ParserCompiler {
 
         if (!match(";")) {
             throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        } else if (!type.isPresent() && !expression.isPresent()) {
+            throw new ParseException("Expected: Value or Type declaration, received: `" + getMatchedLiteral() + "`.", getMatchedIndex());
         }
 
         return new Ast.Stmt.Declaration(name, type, expression);
@@ -216,6 +220,8 @@ public final class ParserCompiler {
      * {@code IF}.
      */
     public Ast.Stmt.If parseIfStatement() throws ParseException {
+        match("IF");
+
         Ast.Expr condition = parseExpression();
 
         if (!match("DO")) {
@@ -247,6 +253,8 @@ public final class ParserCompiler {
      * {@code FOR}.
      */
     public Ast.Stmt.For parseForStatement() throws ParseException {
+        match("FOR");
+
         if (!match(Token.Type.IDENTIFIER)) {
             throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
@@ -280,6 +288,8 @@ public final class ParserCompiler {
      * {@code WHILE}.
      */
     public Ast.Stmt.While parseWhileStatement() throws ParseException {
+        match("WHILE");
+
         Ast.Expr condition = parseExpression();
         List<Ast.Stmt> statements = new ArrayList<>();
 
@@ -302,6 +312,8 @@ public final class ParserCompiler {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
+        match("RETURN");
+
         Ast.Stmt.Return ret = new Ast.Stmt.Return(parseExpression());
 
         if (!match(";")) {

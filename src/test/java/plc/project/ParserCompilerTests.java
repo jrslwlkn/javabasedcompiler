@@ -95,6 +95,32 @@ final class ParserCompilerTests {
 
     @ParameterizedTest
     @MethodSource
+    void testMethodStatement(String test, List<Token> tokens, Ast.Stmt.Method expected) {
+        test(tokens, expected, ParserCompiler::parseStatement);
+    }
+
+    private static Stream<Arguments> testMethodStatement() {
+        return Stream.of(
+                Arguments.of(
+                        "Argument Missing Type",
+                        Arrays.asList(
+                                new Token(Token.Type.IDENTIFIER, "DEF", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "(", 8),
+                                new Token(Token.Type.IDENTIFIER, "arg", 8),
+                                new Token(Token.Type.OPERATOR, ")", 8),
+                                new Token(Token.Type.IDENTIFIER, "DO", 8),
+                                new Token(Token.Type.IDENTIFIER, "stmt", 10),
+                                new Token(Token.Type.OPERATOR, ";", 14),
+                                new Token(Token.Type.IDENTIFIER, "END", 14)
+                        ),
+                        null
+                )
+        );
+    }
+
+    @ParameterizedTest
+    @MethodSource
     void testDeclarationStatement(String test, List<Token> tokens, Ast.Stmt.Declaration expected) {
         test(tokens, expected, ParserCompiler::parseStatement);
     }
