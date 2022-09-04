@@ -85,6 +85,15 @@ final class ParserTests {
                                 new Token(Token.Type.OPERATOR, ";", 6)
                         ),
                         new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList()))
+                ),
+                Arguments.of("Function Expression Missing Semicolon",
+                        Arrays.asList(
+                                //name();
+                                new Token(Token.Type.IDENTIFIER, "name", 0),
+                                new Token(Token.Type.OPERATOR, "(", 4),
+                                new Token(Token.Type.OPERATOR, ")", 5)
+                        ),
+                        null
                 )
         );
     }

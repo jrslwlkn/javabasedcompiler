@@ -110,7 +110,40 @@ public final class Parser {
      * statement, then it is an expression/assignment statement.
      */
     public Ast.Stmt parseStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("LET")) {
+            return parseDeclarationStatement();
+
+        } else if (match("IF")) {
+            return parseIfStatement();
+
+        } else if (match("FOR")) {
+            return parseForStatement();
+
+        } else if (match("WHILE")) {
+            return parseWhileStatement();
+
+        } else if (match("RETURN")) {
+            return parseReturnStatement();
+
+        } else {
+            return parseAssignment();
+        }
+    }
+
+    private Ast.Stmt parseAssignment() {
+        Ast.Expr receiver = parseExpression();
+
+        Ast.Stmt.Assignment assignment = null;
+        if (match("=")) {
+            // this is actually an assignment
+            assignment = new Ast.Stmt.Assignment(receiver, parseExpression());
+        }
+
+        if (!match(";")) {
+            throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        return assignment == null ? new Ast.Stmt.Expression(receiver) : assignment;
     }
 
     /**
@@ -119,7 +152,21 @@ public final class Parser {
      * statement, aka {@code LET}.
      */
     public Ast.Stmt.Declaration parseDeclarationStatement() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (!match(Token.Type.IDENTIFIER)) {
+            // todo: add type of received token for error message clarity
+            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        String name = getMatchedLiteral();
+        Ast.Expr expression = null;
+        if (match("=")) {
+            expression = parseExpression();
+        }
+        if (!match(";")) {
+            throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        return new Ast.Stmt.Declaration(name, expression == null ? Optional.empty() : Optional.of(expression));
     }
 
     /**
@@ -416,11 +463,11 @@ public final class Parser {
     }
 
     private String getPeekedLiteral() {
-        return tokens.get(0).getLiteral();
+        return tokens.has(0) ? tokens.get(0).getLiteral() : "";
     }
 
     private int getPeekedIndex() {
-        return tokens.get(0).getIndex();
+        return tokens.has(0) ? tokens.get(0).getIndex() : getMatchedIndex() + getMatchedLiteral().length();
     }
 
     private String getCleanedStringValue(String rawValue) {
