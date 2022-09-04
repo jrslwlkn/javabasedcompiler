@@ -148,7 +148,53 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Binary ast) {
-        throw new UnsupportedOperationException();  // TODO
+        String op = ast.getOperator();
+        Ast.Expr lhs = ast.getLeft();
+        Ast.Expr rhs = ast.getRight();
+        visit(lhs);
+        visit(rhs);
+
+        if (op.equals("AND") || op.equals("OR")) {
+            requireType(Environment.Type.BOOLEAN, lhs.getType());
+            requireType(Environment.Type.BOOLEAN, rhs.getType());
+
+            ast.setType(Environment.Type.BOOLEAN);
+
+        } else if (op.equals("<") || op.equals("<=") || op.equals(">") || op.equals(">=") || op.equals("==") || op.equals("!=")) {
+            requireType(Environment.Type.COMPARABLE, lhs.getType());
+            requireType(Environment.Type.COMPARABLE, rhs.getType());
+            requireType(rhs.getType(), lhs.getType());
+
+            ast.setType(Environment.Type.BOOLEAN);
+
+        } else if (op.equals("+")) {
+            if (lhs.getType().getName().equals("String") || rhs.getType().getName().equals("String")) {
+                ast.setType(Environment.Type.STRING);
+
+            } else if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
+                requireType(lhs.getType(), rhs.getType());
+
+                ast.setType(lhs.getType());
+
+            } else {
+                throw new RuntimeException(lhs.getType() + " does not support operator `+`.");
+
+            }
+        } else if (op.equals("-") || op.equals("*") || op.equals("/")) {
+            if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
+                requireType(lhs.getType(), rhs.getType());
+
+                ast.setType(lhs.getType());
+
+            } else {
+                throw new RuntimeException(lhs.getType() + " does not support operator `-`.");
+
+            }
+        } else {
+            throw new RuntimeException(lhs.getType() + " does not support operator " + op + ".");
+        }
+
+        return null;
     }
 
     @Override
@@ -176,6 +222,22 @@ public final class Analyzer implements Ast.Visitor<Void> {
             return;
         }
         throw new RuntimeException("Specified type does not match the target type.");
+    }
+
+    private static void requireType(Environment.Type required, Environment.Type given) {
+        if (required.getName().equals("Any")) {
+            return;
+        }
+        if (required.getName().equals("Comparable")) {
+            if (given.getName().equals("Integer") || given.getName().equals("Decimal") || given.getName().equals("Character") || given.getName().equals("String")) {
+                return;
+            } else {
+                throw new RuntimeException(given.getName() + " is not Comparable.");
+            }
+        }
+        if (!required.getName().equals(given.getName())) {
+            throw new RuntimeException("Expected type: " + required.getName() + ", received: " + given.getName() + ".");
+        }
     }
 
 }
