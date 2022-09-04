@@ -3,7 +3,9 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
@@ -39,7 +41,30 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
-        throw new UnsupportedOperationException(); //TODO
+        Function<List<Environment.PlcObject>, Environment.PlcObject> func = (args) -> {
+            Scope prev = scope;
+            scope = new Scope(scope);
+            Environment.PlcObject ret = Environment.NIL;
+
+            List<String> params = ast.getParameters();
+            for (int i = 0; i < params.size(); i++) {
+                scope.defineVariable(params.get(i), args.get(i));
+            }
+
+            try {
+                for (Ast.Stmt stmt : ast.getStatements()) {
+                    visit(stmt);
+                }
+            } catch (Return e) {
+                ret = e.value;
+            }
+
+            scope = prev;
+            return ret;
+        };
+
+        scope.defineFunction(ast.getName(), ast.getParameters().size(), func);
+        return Environment.NIL;
     }
 
     @Override
@@ -134,7 +159,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Return ast) {
-        throw new UnsupportedOperationException(); //TODO
+        throw new Return(visit(ast.getValue()));
     }
 
     @Override
