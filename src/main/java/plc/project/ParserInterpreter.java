@@ -19,11 +19,11 @@ import java.util.Optional;
  * grammar will have it's own function, and reference to other rules correspond
  * to calling that functions.
  */
-public final class Parser {
+public final class ParserInterpreter {
 
     private final TokenStream tokens;
 
-    public Parser(List<Token> tokens) {
+    public ParserInterpreter(List<Token> tokens) {
         this.tokens = new TokenStream(tokens);
     }
 
