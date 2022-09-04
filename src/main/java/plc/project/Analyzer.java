@@ -2,7 +2,9 @@ package plc.project;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * See the specification for information about what the different visit
@@ -40,7 +42,48 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        throw new UnsupportedOperationException();  // TODO
+        List<Environment.Type> paramTypes = new ArrayList<>();
+        for (String param : ast.getParameters()) {
+            paramTypes.add(scope.lookupVariable(param).getType());
+        }
+
+        Environment.Type retType = null;
+        if (!ast.getReturnTypeName().isPresent()) {
+            retType = Environment.Type.NIL;
+        } else if (ast.getReturnTypeName().get().equals("Boolean")) {
+            retType = Environment.Type.BOOLEAN;
+        } else if (ast.getReturnTypeName().get().equals("Integer")) {
+            retType = Environment.Type.INTEGER;
+        } else if (ast.getReturnTypeName().get().equals("String")) {
+            retType = Environment.Type.STRING;
+        } else if (ast.getReturnTypeName().get().equals("Character")) {
+            retType = Environment.Type.CHARACTER;
+        } else if (ast.getReturnTypeName().get().equals("Decimal")) {
+            retType = Environment.Type.DECIMAL;
+        } // TODO: include Comparable ?
+
+        scope.defineFunction(ast.getName(), ast.getName(), paramTypes, retType, plcObjects -> Environment.NIL);
+
+        Environment.Type retTypeProvided = Environment.Type.ANY;
+
+        try {
+            for (Ast.Stmt statement : ast.getStatements()) {
+                scope = new Scope(scope);
+                visit(statement);
+                if (statement instanceof Ast.Stmt.Return) {
+                    retTypeProvided = ((Ast.Stmt.Return) statement).getValue().getType();
+                }
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+
+
+        if (!retType.equals(retTypeProvided)) {
+            throw new RuntimeException("Return type does not match the type of the return value.");
+        }
+
+        return null;
     }
 
     @Override
