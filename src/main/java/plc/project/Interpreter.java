@@ -60,7 +60,19 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Assignment ast) {
-        throw new UnsupportedOperationException(); //TODO
+        if (!ast.getReceiver().getClass().equals(Ast.Expr.Access.class)) {
+            throw new RuntimeException("Operand is not of an assignable type.");
+        }
+
+        Environment.PlcObject value = visit(ast.getValue());
+        Ast.Expr.Access lhs = (Ast.Expr.Access) ast.getReceiver();
+        if (lhs.getReceiver().isPresent()) {
+            visit(lhs.getReceiver().get()).setField(lhs.getName(), value);
+        } else {
+            scope.lookupVariable(lhs.getName()).setValue(value);
+        }
+
+        return Environment.NIL;
     }
 
     @Override
