@@ -26,7 +26,28 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Source ast) {
-        throw new UnsupportedOperationException(); //TODO
+
+        for (Ast.Field field : ast.getFields()) {
+            if (field.getValue().isPresent()) {
+                scope.defineVariable(field.getName(), visit(field.getValue().get()));
+            } else {
+                scope.defineVariable(field.getName(), Environment.NIL);
+            }
+        }
+
+        Environment.PlcObject main = null;
+        for (Ast.Method method : ast.getMethods()) {
+            Environment.PlcObject m = visit(method);
+            if (method.getName().equals("main") && method.getParameters().size() == 0) {
+                main = m;
+            }
+        }
+
+        if (main == null) {
+            throw new RuntimeException("`main()` is missing in this scope.");
+        } else {
+            return scope.lookupFunction("main", 0).invoke(new ArrayList<>());
+        }
     }
 
     @Override
@@ -69,7 +90,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     @Override
-    public Environment.PlcObject visit(Ast.Stmt.Expression ast) { // fixme
+    public Environment.PlcObject visit(Ast.Stmt.Expression ast) {
         visit(ast.getExpression());
 
         return Environment.NIL;
