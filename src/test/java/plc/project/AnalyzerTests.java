@@ -374,6 +374,9 @@ public final class AnalyzerTests {
                 Arguments.of("Integer to Integer", Environment.Type.INTEGER, Environment.Type.INTEGER, true),
                 Arguments.of("Integer to Decimal", Environment.Type.DECIMAL, Environment.Type.INTEGER, false),
                 Arguments.of("Integer to Comparable", Environment.Type.COMPARABLE, Environment.Type.INTEGER, true),
+                Arguments.of("Decimal to Comparable", Environment.Type.COMPARABLE, Environment.Type.DECIMAL, true),
+                Arguments.of("Character to Comparable", Environment.Type.COMPARABLE, Environment.Type.CHARACTER, true),
+                Arguments.of("String to Comparable", Environment.Type.COMPARABLE, Environment.Type.STRING, true),
                 Arguments.of("Integer to Any", Environment.Type.ANY, Environment.Type.INTEGER, true),
                 Arguments.of("Any to Integer", Environment.Type.INTEGER, Environment.Type.ANY, false)
         );

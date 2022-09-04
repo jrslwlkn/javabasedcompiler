@@ -62,7 +62,19 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.While ast) {
-        throw new UnsupportedOperationException();  // TODO
+        visit(ast.getCondition());
+
+        requireAssignable(Environment.Type.BOOLEAN, ast.getCondition().getType());
+        try {
+            scope = new Scope(scope);
+            for (Ast.Stmt statement : ast.getStatements()) {
+                visit(statement);
+            }
+        } finally {
+            scope = scope.getParent();
+        }
+
+        return null;
     }
 
     @Override
@@ -96,7 +108,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
     }
 
     public static void requireAssignable(Environment.Type target, Environment.Type type) {
-        throw new UnsupportedOperationException();  // TODO
+        String _target = target.getName();
+        String _type = type.getName();
+        if (_target.equals("Any")) {
+            return;
+        }
+        if (_target.equals("Comparable")) {
+            if (_type.equals("Integer") || _type.equals("Decimal") || _type.equals("Character") || _type.equals("String")) {
+                return;
+            }
+        }
+        if (_target.equals(_type)) {
+            return;
+        }
+        throw new RuntimeException("Specified type does not match the target type.");
     }
 
 }
