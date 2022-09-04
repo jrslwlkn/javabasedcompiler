@@ -137,6 +137,42 @@ final class ParserTests {
 
     private static Stream<Arguments> testAssignmentStatement() {
         return Stream.of(
+                Arguments.of("Expression Assignment",
+                        Arrays.asList(
+                                //x.y = z;
+                                new Token(Token.Type.IDENTIFIER, "x", 0),
+                                new Token(Token.Type.OPERATOR, ".", 0),
+                                new Token(Token.Type.IDENTIFIER, "y", 0),
+                                new Token(Token.Type.OPERATOR, "=", 4),
+                                new Token(Token.Type.IDENTIFIER, "z", 6),
+                                new Token(Token.Type.OPERATOR, ";", 7)
+                        ),
+                        new Ast.Stmt.Assignment(
+                                new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "x")), "y"),
+                                new Ast.Expr.Access(Optional.empty(), "z")
+                        )
+                ),
+                Arguments.of("Expression Assignment to Expression",
+                        Arrays.asList(
+                                //obj.field = expr + 1;
+                                new Token(Token.Type.IDENTIFIER, "obj", 0),
+                                new Token(Token.Type.OPERATOR, ".", 2),
+                                new Token(Token.Type.IDENTIFIER, "field", 4),
+                                new Token(Token.Type.OPERATOR, "=", 6),
+                                new Token(Token.Type.IDENTIFIER, "expr", 8),
+                                new Token(Token.Type.OPERATOR, "+", 9),
+                                new Token(Token.Type.INTEGER, "1", 9),
+                                new Token(Token.Type.OPERATOR, ";", 9)
+                        ),
+                        new Ast.Stmt.Assignment(
+                                new Ast.Expr.Access(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "field"),
+                                new Ast.Expr.Binary(
+                                        "+",
+                                        new Ast.Expr.Access(Optional.empty(), "expr"),
+                                        new Ast.Expr.Literal(new BigInteger("1"))
+                                )
+                        )
+                ),
                 Arguments.of("Expression Assignment to Expression",
                         Arrays.asList(
                                 //x = x + field;
@@ -168,6 +204,7 @@ final class ParserTests {
                                 new Ast.Expr.Access(Optional.empty(), "name"),
                                 new Ast.Expr.Access(Optional.empty(), "value")
                         )
+<<<<<<< HEAD
 <<<<<<< HEAD:src/test/java/plc/project/ParserExpressionTests.java
 =======
                 ),
@@ -185,6 +222,8 @@ final class ParserTests {
                                 new Ast.Expr.Access(Optional.empty(), "z")
                         )
 >>>>>>> 2020f74 (Fix failing test case):src/test/java/plc/project/ParserTests.java
+=======
+>>>>>>> 6a62219 (Fix last failing test case)
                 )
         );
     }
