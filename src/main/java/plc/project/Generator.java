@@ -106,7 +106,9 @@ public final class Generator implements Ast.Visitor<Void> {
         }
         indent--;
 
-        newline(indent);
+        if (ast.getStatements().size() > 0) {
+            newline(indent);
+        }
         writer.write("}");
 
         return null;
@@ -158,7 +160,10 @@ public final class Generator implements Ast.Visitor<Void> {
         writer.write("if (");
         visit(ast.getCondition());
         writer.write(") {");
-        newline(0);
+
+        if (ast.getThenStatements().size() > 0) {
+            newline(0);
+        }
 
         indent++;
         for (Ast.Stmt stmt : ast.getThenStatements()) {
@@ -166,7 +171,11 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(0);
         }
         indent--;
-        indent();
+
+        if (ast.getThenStatements().size() > 0) {
+            indent();
+        }
+
         writer.write("}");
 
         if (ast.getElseStatements().size() > 0) {
@@ -201,7 +210,9 @@ public final class Generator implements Ast.Visitor<Void> {
         }
         indent--;
 
-        newline(indent);
+        if (ast.getStatements().size() > 0) {
+            newline(indent);
+        }
         writer.write("}");
 
         return null;
@@ -221,7 +232,9 @@ public final class Generator implements Ast.Visitor<Void> {
         }
         indent--;
 
-        newline(indent);
+        if (ast.getStatements().size() > 0) {
+            newline(indent);
+        }
         writer.write("}");
 
         return null;

@@ -22,6 +22,7 @@ public class GeneratorTests {
         test(ast, expected);
     }
 
+    // TODO: add test cases covering multiple fields with multiple methods and statements in methods
     private static Stream<Arguments> testSource() {
         return Stream.of(
                 Arguments.of("Hello, World!",
@@ -141,6 +142,20 @@ public class GeneratorTests {
     private static Stream<Arguments> testWhileStatement() {
         return Stream.of(
                 Arguments.of(
+                        "Empty While",
+                        new Ast.Stmt.While(
+                                // condition
+                                init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                // while statements
+                                Arrays.asList()
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (expr) {}"
+                        )
+                ),
+
+                Arguments.of(
                         "While",
                         new Ast.Stmt.While(
                                 // condition
@@ -218,6 +233,19 @@ public class GeneratorTests {
 
     private static Stream<Arguments> testIfStatement() {
         return Stream.of(
+                Arguments.of("Empty If",
+                        // IF expr DO
+                        //     stmt;
+                        // END
+                        new Ast.Stmt.If(
+                                init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+                                Arrays.asList(),
+                                Arrays.asList()
+                        ),
+                        String.join(System.lineSeparator(),
+                                "if (expr) {}"
+                        )
+                ),
                 Arguments.of("If",
                         // IF expr DO
                         //     stmt;
