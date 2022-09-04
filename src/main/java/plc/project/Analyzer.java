@@ -48,10 +48,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
     public Void visit(Ast.Field ast) {
         if (ast.getValue().isPresent()) {
             visit(ast.getValue().get());
-            requireAssignable(Environment.getType(ast.getName()), ast.getValue().get().getType());
+            requireAssignable(Environment.getType(ast.getTypeName()), ast.getValue().get().getType());
         }
 
-        ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), Environment.getType(ast.getName()), Environment.NIL));
+        ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
         return null;
     }
 
