@@ -26,7 +26,22 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
-        throw new UnsupportedOperationException();  // TODO
+        for (Ast.Field field : ast.getFields()) {
+            visit(field);
+        }
+
+        Ast.Method main = null;
+        for (Ast.Method method : ast.getMethods()) {
+            visit(method);
+            if (method.getName().equals("main") && method.getParameters().size() == 0) {
+                main = method;
+            }
+        }
+        if (main == null || !main.getReturnTypeName().isPresent() || !main.getReturnTypeName().get().equals("Integer")) {
+            throw new RuntimeException("main() is not defined.");
+        }
+
+        return null;
     }
 
     @Override
