@@ -68,6 +68,12 @@ public final class ParserCompiler {
         }
 
         String name = getMatchedLiteral();
+
+        if (!match(":", Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected: Type declaration, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+        String type = getMatchedLiteral();
+
         Ast.Expr value = null;
         if (match("=")) {
             value = parseExpression();
@@ -76,7 +82,7 @@ public final class ParserCompiler {
             throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        return new Ast.Field(name, value == null ? Optional.empty() : Optional.of(value));
+        return new Ast.Field(name, type, value == null ? Optional.empty() : Optional.of(value));
     }
 
     /**
@@ -94,11 +100,19 @@ public final class ParserCompiler {
             throw new ParseException("Expected: `(`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        List<String> parameters = matchAndGetParameters();
+        List<String> parameters = new ArrayList<>();
+        List<String> parametersTypes = new ArrayList<>();
+        matchAndGetParameters(parameters, parametersTypes);
 
         if (!match(")")) {
             throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
+
+        Optional<String> returnType = Optional.empty();
+        if (match(":", Token.Type.IDENTIFIER)) {
+            returnType = Optional.of(getMatchedLiteral());
+        }
+
         if (!match("DO")) {
             throw new ParseException("Expected: `DO`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
@@ -112,7 +126,7 @@ public final class ParserCompiler {
             throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        return new Ast.Method(name, parameters, statements);
+        return new Ast.Method(name, parameters, parametersTypes, returnType, statements);
     }
 
     /**
@@ -168,15 +182,22 @@ public final class ParserCompiler {
         }
 
         String name = getMatchedLiteral();
+
         Ast.Expr expression = null;
         if (match("=")) {
             expression = parseExpression();
         }
+
+        Optional<String> type = Optional.empty();
+        if (match(":", Token.Type.IDENTIFIER)) {
+            type = Optional.of(getMatchedLiteral());
+        }
+
         if (!match(";")) {
             throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        return new Ast.Stmt.Declaration(name, expression == null ? Optional.empty() : Optional.of(expression));
+        return new Ast.Stmt.Declaration(name, type, expression == null ? Optional.empty() : Optional.of(expression));
     }
 
     /**
@@ -271,7 +292,13 @@ public final class ParserCompiler {
      * {@code RETURN}.
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
-        return new Ast.Stmt.Return(parseExpression());
+        Ast.Stmt.Return ret = new Ast.Stmt.Return(parseExpression());
+
+        if (!match(";")) {
+            throw new ParseException("Missing `;` in Return statement.", getPeekedIndex());
+        }
+
+        return ret;
     }
 
     /**
@@ -418,18 +445,19 @@ public final class ParserCompiler {
         return arguments;
     }
 
-    private List<String> matchAndGetParameters() {
-        List<String> parameters = new ArrayList<>();
-
+    private void matchAndGetParameters(List<String> parameters, List<String> parametersTypes) {
         while (match(Token.Type.IDENTIFIER)) {
             parameters.add(getMatchedLiteral());
+
+            if (!match(":", Token.Type.IDENTIFIER)) {
+                throw new ParseException("Expected: Type declaration, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+            }
+            parametersTypes.add(getMatchedLiteral());
 
             if (!match(",")) {
                 break;
             }
         }
-
-        return parameters;
     }
 
     private Ast.Expr parseExpressionAfterDot(Ast.Expr receiver) {

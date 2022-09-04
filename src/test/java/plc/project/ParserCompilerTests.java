@@ -23,7 +23,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testSource(String test, List<Token> tokens, Ast.Source expected) {
-        test(tokens, expected, ParserInterpreter::parseSource);
+        test(tokens, expected, ParserCompiler::parseSource);
     }
 
     private static Stream<Arguments> testSource() {
@@ -75,7 +75,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testExpressionStatement(String test, List<Token> tokens, Ast.Stmt.Expression expected) {
-        test(tokens, expected, ParserInterpreter::parseStatement);
+        test(tokens, expected, ParserCompiler::parseStatement);
     }
 
     private static Stream<Arguments> testExpressionStatement() {
@@ -96,7 +96,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testDeclarationStatement(String test, List<Token> tokens, Ast.Stmt.Declaration expected) {
-        test(tokens, expected, ParserInterpreter::parseStatement);
+        test(tokens, expected, ParserCompiler::parseStatement);
     }
 
     private static Stream<Arguments> testDeclarationStatement() {
@@ -129,7 +129,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testAssignmentStatement(String test, List<Token> tokens, Ast.Stmt.Assignment expected) {
-        test(tokens, expected, ParserInterpreter::parseStatement);
+        test(tokens, expected, ParserCompiler::parseStatement);
     }
 
     private static Stream<Arguments> testAssignmentStatement() {
@@ -154,7 +154,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testIfStatement(String test, List<Token> tokens, Ast.Stmt.If expected) {
-        test(tokens, expected, ParserInterpreter::parseStatement);
+        test(tokens, expected, ParserCompiler::parseStatement);
     }
 
     private static Stream<Arguments> testIfStatement() {
@@ -200,7 +200,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testForStatement(String test, List<Token> tokens, Ast.Stmt.For expected) {
-        test(tokens, expected, ParserInterpreter::parseStatement);
+        test(tokens, expected, ParserCompiler::parseStatement);
     }
 
     private static Stream<Arguments> testForStatement() {
@@ -229,7 +229,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testWhileStatement(String test, List<Token> tokens, Ast.Stmt.While expected) {
-        test(tokens, expected, ParserInterpreter::parseStatement);
+        test(tokens, expected, ParserCompiler::parseStatement);
     }
 
     private static Stream<Arguments> testWhileStatement() {
@@ -255,7 +255,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testReturnStatement(String test, List<Token> tokens, Ast.Stmt.Return expected) {
-        test(tokens, expected, ParserInterpreter::parseStatement);
+        test(tokens, expected, ParserCompiler::parseStatement);
     }
 
     private static Stream<Arguments> testReturnStatement() {
@@ -275,7 +275,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testLiteralExpression(String test, List<Token> tokens, Ast.Expr.Literal expected) {
-        test(tokens, expected, ParserInterpreter::parseExpression);
+        test(tokens, expected, ParserCompiler::parseExpression);
     }
 
     private static Stream<Arguments> testLiteralExpression() {
@@ -310,7 +310,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testGroupExpression(String test, List<Token> tokens, Ast.Expr.Group expected) {
-        test(tokens, expected, ParserInterpreter::parseExpression);
+        test(tokens, expected, ParserCompiler::parseExpression);
     }
 
     private static Stream<Arguments> testGroupExpression() {
@@ -344,7 +344,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testBinaryExpression(String test, List<Token> tokens, Ast.Expr.Binary expected) {
-        test(tokens, expected, ParserInterpreter::parseExpression);
+        test(tokens, expected, ParserCompiler::parseExpression);
     }
 
     private static Stream<Arguments> testBinaryExpression() {
@@ -403,7 +403,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testAccessExpression(String test, List<Token> tokens, Ast.Expr.Access expected) {
-        test(tokens, expected, ParserInterpreter::parseExpression);
+        test(tokens, expected, ParserCompiler::parseExpression);
     }
 
     private static Stream<Arguments> testAccessExpression() {
@@ -427,7 +427,7 @@ final class ParserCompilerTests {
     @ParameterizedTest
     @MethodSource
     void testFunctionExpression(String test, List<Token> tokens, Ast.Expr.Function expected) {
-        test(tokens, expected, ParserInterpreter::parseExpression);
+        test(tokens, expected, ParserCompiler::parseExpression);
     }
 
     private static Stream<Arguments> testFunctionExpression() {
@@ -549,19 +549,19 @@ final class ParserCompilerTests {
                         )
                         ))
                 ));
-        test(input, expected, ParserInterpreter::parseSource);
+        test(input, expected, ParserCompiler::parseSource);
     }
 
     /**
      * Standard test function. If expected is null, a ParseException is expected
      * to be thrown (not used in the provided tests).
      */
-    private static <T extends Ast> void test(List<Token> tokens, T expected, Function<ParserInterpreter, T> function) {
-        ParserInterpreter parserInterpreter = new ParserInterpreter(tokens);
+    private static <T extends Ast> void test(List<Token> tokens, T expected, Function<ParserCompiler, T> function) {
+        ParserCompiler parser = new ParserCompiler(tokens);
         if (expected != null) {
-            Assertions.assertEquals(expected, function.apply(parserInterpreter));
+            Assertions.assertEquals(expected, function.apply(parser));
         } else {
-            Assertions.assertThrows(ParseException.class, () -> function.apply(parserInterpreter));
+            Assertions.assertThrows(ParseException.class, () -> function.apply(parser));
         }
     }
 
