@@ -81,6 +81,84 @@ public class GeneratorTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    void testWhileStatement(String test, Ast.Stmt.While ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testWhileStatement() {
+        return Stream.of(
+                Arguments.of(
+                        "While",
+                        new Ast.Stmt.While(
+                                // condition
+                                init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                // while statements
+                                Arrays.asList(
+                                        new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))
+                                )
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (expr) {",
+                                "    stmt;",
+                                "}"
+                        )
+                ),
+
+                Arguments.of(
+                        "While with If",
+                        new Ast.Stmt.While(
+                                // condition
+                                init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                // while statements
+                                Arrays.asList(
+                                        new Ast.Stmt.If(
+                                                init(new Ast.Expr.Access(Optional.empty(), "expr1"), ast -> ast.setVariable(new Environment.Variable("expr1", "expr1", Environment.Type.BOOLEAN, Environment.NIL))),
+                                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))),
+                                                Arrays.asList()
+                                        )
+                                )
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (expr) {",
+                                "    if (expr1) {",
+                                "        stmt;",
+                                "    }",
+                                "}"
+                        )
+                ),
+
+                Arguments.of(
+                        "While with For",
+                        new Ast.Stmt.While(
+                                // condition
+                                init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                // while statements
+                                Arrays.asList(
+                                        new Ast.Stmt.For(
+                                                "expr1",
+
+                                                init(new Ast.Expr.Access(Optional.empty(), "expr1"), ast -> ast.setVariable(new Environment.Variable("expr1", "expr1", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL)))))
+                                        )
+                                )
+                        ),
+                        String.join(System.lineSeparator(),
+                                "while (expr) {",
+                                "    for (int expr1 : expr1) {",
+                                "        stmt;",
+                                "    }",
+                                "}"
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     void testIfStatement(String test, Ast.Stmt.If ast, String expected) {
         test(ast, expected);
     }
@@ -118,6 +196,28 @@ public class GeneratorTests {
                                 "    stmt1;",
                                 "} else {",
                                 "    stmt2;",
+                                "}"
+                        )
+                ),
+                Arguments.of("If with While",
+                        new Ast.Stmt.If(
+                                init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+                                Arrays.asList(
+                                        new Ast.Stmt.While(
+                                                // condition
+                                                init(new Ast.Expr.Access(Optional.empty(), "expr1"), ast -> ast.setVariable(new Environment.Variable("expr1", "expr1", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                // while statements
+                                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL)))))
+                                        )
+                                ),
+                                Arrays.asList()
+                        ),
+                        String.join(System.lineSeparator(),
+                                "if (expr) {",
+                                "    while (expr1) {",
+                                "        stmt;",
+                                "    }",
                                 "}"
                         )
                 ),
