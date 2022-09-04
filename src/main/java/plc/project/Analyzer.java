@@ -51,7 +51,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             requireAssignable(Environment.getType(ast.getTypeName()), ast.getValue().get().getType());
         }
 
-        ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
         return null;
     }
 
@@ -75,11 +75,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
             retType = Environment.Type.CHARACTER;
         } else if (ast.getReturnTypeName().get().equals("Decimal")) {
             retType = Environment.Type.DECIMAL;
-        } // TODO: include Comparable ?
+        }
 
         scope.defineFunction(ast.getName(), ast.getName(), paramTypes, retType, plcObjects -> Environment.NIL);
-
-        Environment.Type retTypeProvided = Environment.Type.ANY;
 
         try {
             for (Ast.Stmt statement : ast.getStatements()) {
@@ -91,7 +89,9 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 visit(statement);
             }
         } finally {
-            scope = scope.getParent();
+            if (!ast.getStatements().isEmpty()) {
+                scope = scope.getParent();
+            }
         }
 
         ast.setFunction(scope.lookupFunction(ast.getName(), ast.getParameters().size()));

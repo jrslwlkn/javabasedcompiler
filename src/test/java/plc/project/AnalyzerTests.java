@@ -27,6 +27,30 @@ public final class AnalyzerTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+<<<<<<< HEAD
+=======
+    public void testField(String test, Ast.Field ast, Ast.Field expected) {
+        Analyzer analyzer = test(ast, expected, new Scope(null));
+        if (expected != null) {
+            Assertions.assertEquals(expected.getVariable(), analyzer.scope.lookupVariable(expected.getName()));
+        }
+    }
+
+    private static Stream<Arguments> testField() {
+        return Stream.of(
+                Arguments.of("Declaration",
+                        // LET name: Integer;
+                        new Ast.Field("name", "Integer", Optional.empty()),
+                        init(new Ast.Field("name", "Integer", Optional.empty()), ast -> {
+                            ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, Environment.NIL));
+                        })
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+>>>>>>> 763844e (Analyzer: Fix failing tests)
     public void testMethod(String test, Ast.Method ast, Ast.Method expected) {
         Analyzer analyzer = test(ast, expected, new Scope(null));
         if (expected != null) {
@@ -40,6 +64,19 @@ public final class AnalyzerTests {
      */
     private static Stream<Arguments> testMethod() {
         return Stream.of(
+                Arguments.of("No Explicit Return Type",
+                        // DEF empty() DO END
+                        new Ast.Method("empty", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()),
+                        init(
+                                new Ast.Method(
+                                        "empty",
+                                        Arrays.asList(),
+                                        Arrays.asList(),
+                                        Optional.empty(),
+                                        Arrays.asList()),
+                                ast -> ast.setFunction(new Environment.Function("empty", "empty", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL))
+                        )
+                ),
                 Arguments.of("Hello World",
                         // DEF main(): Integer DO print("Hello, World!"); END
                         new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
