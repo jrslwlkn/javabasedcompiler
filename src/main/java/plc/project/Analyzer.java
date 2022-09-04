@@ -1,5 +1,7 @@
 package plc.project;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 
 /**
@@ -84,7 +86,40 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Literal ast) {
-        throw new UnsupportedOperationException();  // TODO
+        Object literal = ast.getLiteral();
+        Environment.Type type = null;
+
+        if (literal == null) {
+            type = Environment.Type.NIL;
+
+        } else if (literal instanceof BigInteger) {
+            if (((BigInteger) literal).compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) < 0 || ((BigInteger) literal).compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0) {
+                throw new RuntimeException("The value is out of the Integer range.");
+            }
+
+            type = Environment.Type.INTEGER;
+
+        } else if (literal instanceof BigDecimal) {
+            double temp = ((BigDecimal) literal).doubleValue();
+            if (temp == Double.NEGATIVE_INFINITY || temp == Double.POSITIVE_INFINITY) {
+                throw new RuntimeException("The value is out of the Decimal range.");
+            }
+
+            type = Environment.Type.DECIMAL;
+
+        } else if (literal instanceof String) {
+            type = Environment.Type.STRING;
+
+        } else if (literal instanceof Character) {
+            type = Environment.Type.CHARACTER;
+
+        } else if (literal instanceof Boolean) {
+            type = Environment.Type.BOOLEAN;
+
+        }
+
+        ast.setType(type);
+        return null;
     }
 
     @Override
