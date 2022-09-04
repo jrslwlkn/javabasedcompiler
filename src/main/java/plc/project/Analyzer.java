@@ -270,7 +270,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (ast.getReceiver().isPresent()) {
             Ast.Expr.Access receiver = (Ast.Expr.Access) ast.getReceiver().get();
             visit(receiver);
-            ast.setVariable(new Environment.Variable(ast.getName(), ast.getName(), null, Environment.NIL));
+            ast.setVariable(receiver.getVariable().getType().getScope().lookupVariable(ast.getName()));
         } else {
             ast.setVariable(scope.lookupVariable(ast.getName()));
         }
