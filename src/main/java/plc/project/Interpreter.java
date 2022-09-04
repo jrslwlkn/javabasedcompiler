@@ -3,6 +3,7 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
@@ -309,7 +310,17 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Expr.Function ast) {
-        throw new UnsupportedOperationException(); //TODO
+        List<Environment.PlcObject> arguments = new ArrayList<>();
+        for (Ast.Expr a : ast.getArguments()) {
+            arguments.add(visit(a));
+        }
+
+        if (ast.getReceiver().isPresent()) {
+            Environment.PlcObject receiver = visit(ast.getReceiver().get());
+            return receiver.callMethod(ast.getName(), arguments);
+        } else {
+            return scope.lookupFunction(ast.getName(), ast.getArguments().size()).invoke(arguments);
+        }
     }
 
     /**
