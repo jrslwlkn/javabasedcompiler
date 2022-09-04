@@ -150,6 +150,7 @@ public final class Generator implements Ast.Visitor<Void> {
         visit(ast.getReceiver());
         writer.write(" = ");
         visit(ast.getValue());
+        writer.write(";");
 
         return null;
     }
