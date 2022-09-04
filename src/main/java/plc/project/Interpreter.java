@@ -35,19 +35,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             }
         }
 
-        Environment.PlcObject main = null;
         for (Ast.Method method : ast.getMethods()) {
-            Environment.PlcObject m = visit(method);
-            if (method.getName().equals("main") && method.getParameters().size() == 0) {
-                main = m;
-            }
+            visit(method);
         }
 
-        if (main == null) {
-            throw new RuntimeException("`main()` is missing in this scope.");
-        } else {
-            return scope.lookupFunction("main", 0).invoke(new ArrayList<>());
-        }
+        return scope.lookupFunction("main", 0).invoke(new ArrayList<>());
     }
 
     @Override
