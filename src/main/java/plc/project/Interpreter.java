@@ -99,6 +99,40 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     @Override
+    public Environment.PlcObject visit(Ast.Stmt.For ast) {
+        Iterable<Environment.PlcObject> list = requireType(Iterable.class, visit(ast.getValue()));
+        for (Environment.PlcObject o : list) {
+            try {
+                scope = new Scope(scope);
+                scope.defineVariable(ast.getName(), o);
+                for (Ast.Stmt statement : ast.getStatements()) {
+                    visit(statement);
+                }
+            } finally {
+                scope = scope.getParent();
+            }
+        }
+
+        return Environment.NIL;
+    }
+
+    @Override
+    public Environment.PlcObject visit(Ast.Stmt.While ast) {
+        while (requireType(Boolean.class, visit(ast.getCondition()))) {
+            try {
+                scope = new Scope(scope);
+                for (Ast.Stmt stmt : ast.getStatements()) {
+                    visit(stmt);
+                }
+            } finally {
+                scope = scope.getParent();
+            }
+        }
+
+        return Environment.NIL;
+    }
+
+    @Override
     public Environment.PlcObject visit(Ast.Stmt.Return ast) {
         throw new UnsupportedOperationException(); //TODO
     }
