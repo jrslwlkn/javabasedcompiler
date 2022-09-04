@@ -38,17 +38,22 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Source ast) {
         writer.write("public class Main {");
         newline(0);
+
+        for (Ast.Field field : ast.getFields()) {
+            newline(1);
+            visit(field);
+        }
+
+        if (ast.getFields().size() > 0) {
+            newline(0);
+        }
+
         newline(1);
         writer.write("public static void main(String[] args) {");
         newline(2);
         writer.write("System.exit(new Main().main());");
         newline(1);
         writer.write("}");
-
-        for (Ast.Field field : ast.getFields()) {
-            newline(1);
-            visit(field);
-        }
 
         newline(0);
         indent = 1;

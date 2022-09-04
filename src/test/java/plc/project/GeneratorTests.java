@@ -22,9 +22,85 @@ public class GeneratorTests {
         test(ast, expected);
     }
 
-    // TODO: add test cases covering multiple fields with multiple methods and statements in methods
     private static Stream<Arguments> testSource() {
         return Stream.of(
+                Arguments.of(
+                        "Multiple Fields & Methods",
+
+                        new Ast.Source(
+                                Arrays.asList(
+                                        init(new Ast.Stmt.Field("x", "Integer", Optional.empty()), ast -> ast.setVariable(new Environment.Variable("x", "x", Environment.Type.INTEGER, Environment.NIL))),
+                                        init(new Ast.Stmt.Field("y", "Integer", Optional.of(
+                                                init(new Ast.Expr.Literal(new BigInteger("10")), ast -> ast.setType(Environment.Type.INTEGER))
+                                        )), ast -> ast.setVariable(new Environment.Variable("y", "y", Environment.Type.INTEGER, Environment.NIL)))
+                                ),
+
+                                Arrays.asList(
+                                        init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                                        init(new Ast.Expr.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
+                                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                new Ast.Stmt.Return(init(new Ast.Expr.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
+                                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))),
+
+                                        init(new Ast.Method(
+                                                        "area",
+
+                                                        //parameters
+                                                        Arrays.asList(
+                                                                "radius"
+                                                        ),
+
+                                                        // parameter type names
+                                                        Arrays.asList(
+                                                                "Decimal"
+                                                        ),
+
+                                                        // return type name
+                                                        Optional.of("Decimal"),
+
+                                                        // method statements
+                                                        Arrays.asList(
+                                                                new Ast.Stmt.Return(
+                                                                        new Ast.Expr.Binary(
+                                                                                "*",
+                                                                                new Ast.Expr.Binary(
+                                                                                        "*",
+                                                                                        init(new Ast.Expr.Literal(new BigDecimal("3.14")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                                                                        init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.NIL)))
+                                                                                ),
+                                                                                init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.NIL)))
+                                                                        )
+                                                                )
+                                                        )
+                                                ),
+                                                ast -> ast.setFunction(new Environment.Function("area", "area", Arrays.asList(Environment.Type.DECIMAL), Environment.Type.DECIMAL, args -> Environment.NIL)))
+                                )
+                        ),
+
+                        String.join(System.lineSeparator(),
+                                "public class Main {",
+                                "",
+                                "    int x;",
+                                "    int y = 10;",
+                                "",
+                                "    public static void main(String[] args) {",
+                                "        System.exit(new Main().main());",
+                                "    }",
+                                "",
+                                "    int main() {",
+                                "        System.out.println(\"Hello, World!\");",
+                                "        return 0;",
+                                "    }",
+                                "",
+                                "    double area(double radius) {",
+                                "        return 3.14 * radius * radius;",
+                                "    }",
+                                "",
+                                "}"
+                        )
+                ),
+
                 Arguments.of("Hello, World!",
                         // DEF main(): Integer DO
                         //     print("Hello, World!");
