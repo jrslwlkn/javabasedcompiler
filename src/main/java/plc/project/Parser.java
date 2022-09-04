@@ -1,7 +1,10 @@
 package plc.project;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * The parser takes the sequence of tokens emitted by the lexer and turns that
@@ -40,7 +43,7 @@ public final class Parser {
                 match("");
             } else {
                 throw new ParseException("Unexpected token: "
-                        + getCurrentLiteral()
+                        + getPeekedLiteral()
                         + ". Expected: LET or DEF.",
                         tokens.get(0).getIndex());
             }
@@ -60,31 +63,31 @@ public final class Parser {
         Ast.Expr value = null;
 
         try {
-            name = getCurrentLiteral();
+            name = getPeekedLiteral();
             if (!match(Token.Type.IDENTIFIER)) {
                 throw new ParseException("Unexpected token: "
-                        + getCurrentLiteral()
+                        + getPeekedLiteral()
                         + ". Expected: Identifier.",
-                        getCurrentIndex());
+                        getPeekedIndex());
             }
             if (match("=")) {
                 value = parseExpression();
             }
             if (!match(";")) {
                 throw new ParseException("Unexpected token: "
-                        + getCurrentLiteral()
+                        + getPeekedLiteral()
                         + ". Expected: ;.",
-                        getCurrentIndex());
+                        getPeekedIndex());
             }
         } catch (ParseException e) {
             throw e;
         } catch (Exception e) {
             throw new ParseException("Unexpected token: "
-                    + getCurrentLiteral(),
-                    getCurrentIndex());
+                    + getPeekedLiteral(),
+                    getPeekedIndex());
         }
 
-        return new Ast.Field(name, (value == null ? null : java.util.Optional.of(value)));
+        return new Ast.Field(name, value == null ? Optional.empty() : Optional.ofNullable(value));
     }
 
     /**
@@ -99,33 +102,33 @@ public final class Parser {
         List<Ast.Stmt> statements;
 
         try {
-            name = getCurrentLiteral();
+            name = getPeekedLiteral();
             if (!match(Token.Type.IDENTIFIER, "(")) {
                 throw new ParseException("Unexpected token: "
-                        + getCurrentLiteral()
+                        + getPeekedLiteral()
                         + ". Expected: Identifier followed by (.",
-                        getCurrentIndex());
+                        getPeekedIndex());
             }
             parameters = getCurrentParameters();
             if (!match(")", "DO")) {
                 throw new ParseException("Unexpected token: "
-                        + getCurrentLiteral()
+                        + getPeekedLiteral()
                         + ". Expected: ).",
-                        getCurrentIndex());
+                        getPeekedIndex());
             }
             statements = getCurrentStatements();
             if (!match("END")) {
                 throw new ParseException("Unexpected token: "
-                        + getCurrentLiteral()
+                        + getPeekedLiteral()
                         + ". Expected: END.",
-                        getCurrentIndex());
+                        getPeekedIndex());
             }
         } catch (ParseException e) {
             throw e;
         } catch (Exception e) {
             throw new ParseException("Unexpected token: "
-                    + getCurrentLiteral(),
-                    getCurrentIndex());
+                    + getPeekedLiteral(),
+                    getPeekedIndex());
         }
 
         return new Ast.Method(name, parameters, statements);
@@ -189,42 +192,78 @@ public final class Parser {
      * Parses the {@code expression} rule.
      */
     public Ast.Expr parseExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        return parseLogicalExpression();
     }
 
     /**
      * Parses the {@code logical-expression} rule.
      */
     public Ast.Expr parseLogicalExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr expression = parseEqualityExpression();
+
+        while (match("AND") || match("OR")) {
+            expression = new Ast.Expr.Binary(getMatchedLiteral(), expression, parseEqualityExpression());
+        }
+
+        return expression;
     }
 
     /**
      * Parses the {@code equality-expression} rule.
      */
     public Ast.Expr parseEqualityExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr expression = parseAdditiveExpression();
+
+        while (match("<")
+                || match("<=")
+                || match(">")
+                || match(">=")
+                || match("==")
+                || match("!=")
+        ) {
+            expression = new Ast.Expr.Binary(getMatchedLiteral(), expression, parseAdditiveExpression());
+        }
+
+        return expression;
     }
 
     /**
      * Parses the {@code additive-expression} rule.
      */
     public Ast.Expr parseAdditiveExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr expression = parseMultiplicativeExpression();
+
+        while (match("+") || match("-")) {
+            expression = new Ast.Expr.Binary(getMatchedLiteral(), expression, parseMultiplicativeExpression());
+        }
+
+        return expression;
     }
 
     /**
      * Parses the {@code multiplicative-expression} rule.
      */
     public Ast.Expr parseMultiplicativeExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr expression = parseSecondaryExpression();
+
+        while (match("*") || match("/")) {
+            expression = new Ast.Expr.Binary(getMatchedLiteral(), expression, parseSecondaryExpression());
+        }
+
+        return expression;
     }
 
     /**
      * Parses the {@code secondary-expression} rule.
      */
     public Ast.Expr parseSecondaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        Ast.Expr currentExpression = parsePrimaryExpression();
+
+        if (match(".")) {
+            return parseExpressionAfterDot(currentExpression);
+        }
+
+        return currentExpression;
     }
 
     /**
@@ -234,16 +273,147 @@ public final class Parser {
      * not strictly necessary.
      */
     public Ast.Expr parsePrimaryExpression() throws ParseException {
-        throw new UnsupportedOperationException(); //TODO
+        if (match("NIL")) {
+            return new Ast.Expr.Literal(null);
+
+        } else if (match("TRUE")) {
+            return new Ast.Expr.Literal(Boolean.TRUE);
+
+        } else if (match("FALSE")) {
+            return new Ast.Expr.Literal(Boolean.FALSE);
+
+        } else if (match(Token.Type.INTEGER)) {
+            return new Ast.Expr.Literal(new BigInteger(getMatchedLiteral()));
+
+        } else if (match(Token.Type.DECIMAL)) {
+            return new Ast.Expr.Literal(new BigDecimal(getMatchedLiteral()));
+
+        } else if (match(Token.Type.CHARACTER)) {
+            return new Ast.Expr.Literal(getCleanedCharValue(getMatchedLiteral()));
+
+        } else if (match(Token.Type.STRING)) {
+            return new Ast.Expr.Literal(getCleanedStringValue(getMatchedLiteral()));
+
+        } else if (peek("(")) {
+            return parseGroup();
+
+        } else if (peek(Token.Type.IDENTIFIER, "(")) {
+            match(Token.Type.IDENTIFIER);
+            String name = getMatchedLiteral();
+            match("(");
+            Ast.Expr expression = new Ast.Expr.Function(Optional.empty(), name, getPeekedArguments()); // fixme: not getCurrentArguments!!!
+
+            if (!match(")")) {
+                throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+            }
+
+            return expression;
+
+        } else if (match(Token.Type.IDENTIFIER)) {
+            return new Ast.Expr.Access(Optional.empty(), getMatchedLiteral());
+
+        } else {
+            throw new ParseException("Unexpected token: "
+                    + getPeekedLiteral(),
+                    getPeekedIndex());
+        }
     }
 
-    private String getCurrentLiteral() {
-        // todo: think whether it should match, because getParameters() matches
+    private List<Ast.Expr> getPeekedArguments() {
+        List<Ast.Expr> arguments = new ArrayList<>();
+
+        while (!peek(")")) {
+            arguments.add(parseExpression());
+
+            if (match(",") && peek(")")) {
+                throw new ParseException("Expected: Literal or Identifier, received: `" + getPeekedLiteral() + "`.",
+                        getPeekedIndex());
+            }
+        }
+
+        return arguments;
+    }
+
+    private Ast.Expr parseExpressionAfterDot(Ast.Expr receiver) {
+        // foo.bar().baz.func() // todo: is `foo.bar().baz()` the receiver ?
+        // foo.bar.baz.func(a, b) ---> tokens: [`foo`,  `.`, `bar`, `.`, `baz`, `.`, `func(a, b)`]
+        // receiver: foo.bar.baz  // todo: not sure if this is right
+        // name: func
+        // arguments: [a, b]
+
+        Ast.Expr currentExpression;
+
+        if (peek(Token.Type.IDENTIFIER, "(")) {
+            // Ast.Expr.Function
+            match(Token.Type.IDENTIFIER);
+            String name = getMatchedLiteral();
+            match("(");
+            List<Ast.Expr> arguments = getPeekedArguments();
+
+            if (!match(")")) {
+                throw new ParseException("Expected: `)`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex()); // expected )
+            }
+
+            currentExpression = new Ast.Expr.Function(Optional.of(receiver), name, arguments);
+        } else if (peek(Token.Type.IDENTIFIER)) {
+            // Ast.Expr.Access
+            currentExpression = new Ast.Expr.Access(Optional.of(receiver), getPeekedLiteral());
+        } else {
+            // not a Ast.Expr.Function or Ast.Expr.Access
+            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex()); // expected Identifier
+        }
+
+        if (match(".")) {
+            // recursive expression construction
+            return parseExpressionAfterDot(currentExpression);
+        }
+
+        return currentExpression;
+    }
+
+    private Ast.Expr.Group parseGroup() {
+        match("(");
+
+        Ast.Expr expression = parseExpression();
+
+        if (!match(")")) { // fixme: make error messages consistent
+            throw new ParseException("Unexpected token: "
+                    + getPeekedLiteral()
+                    + ". Expected: ).",
+                    getPeekedIndex());
+        }
+
+        return new Ast.Expr.Group(expression);
+    }
+
+    private String getMatchedLiteral() {
+        return tokens.get(-1).getLiteral();
+    }
+
+    private int getMatchedIndex() {
+        return tokens.get(-1).getIndex();
+    }
+
+    private String getPeekedLiteral() {
         return tokens.get(0).getLiteral();
     }
 
-    private int getCurrentIndex() {
+    private int getPeekedIndex() {
         return tokens.get(0).getIndex();
+    }
+
+    private String getCleanedStringValue(String rawValue) {
+        String value = rawValue.substring(1, rawValue.length() - 1);
+        return value.replaceAll("\\\\b", "\b")
+                .replaceAll("\\\\n", "\n")
+                .replaceAll("\\\\r", "\r")
+                .replaceAll("\\\\t", "\t")
+                .replaceAll("\\\\", "\\")
+                .replaceAll("\\\\\"", "\"");
+    }
+
+    private Character getCleanedCharValue(String rawValue) {
+        return getCleanedStringValue(rawValue).charAt(0);
     }
 
     private List<Ast.Stmt> getCurrentStatements() {
@@ -281,8 +451,9 @@ public final class Parser {
         List<String> parameters = new ArrayList<>();
 
         while (peek(Token.Type.IDENTIFIER)) {
-            parameters.add(getCurrentLiteral());
+            parameters.add(getPeekedLiteral());
             match(Token.Type.IDENTIFIER);
+
             if (!match(",")) {
                 break;
             }
