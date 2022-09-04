@@ -43,8 +43,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     @Override
-    public Environment.PlcObject visit(Ast.Stmt.Expression ast) {
-        throw new UnsupportedOperationException(); //TODO
+    public Environment.PlcObject visit(Ast.Stmt.Expression ast) { // fixme
+        visit(ast.getExpression());
+
+        return Environment.NIL;
     }
 
     @Override
@@ -77,25 +79,20 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
     @Override
     public Environment.PlcObject visit(Ast.Stmt.If ast) {
-        throw new UnsupportedOperationException(); //TODO
-    }
+        try {
+            scope = new Scope(scope);
 
-    @Override
-    public Environment.PlcObject visit(Ast.Stmt.For ast) {
-        throw new UnsupportedOperationException(); //TODO
-    }
-
-    @Override
-    public Environment.PlcObject visit(Ast.Stmt.While ast) {
-        while (requireType(Boolean.class, visit(ast.getCondition()))) {
-            try {
-                scope = new Scope(scope);
-                for (Ast.Stmt stmt : ast.getStatements()) {
+            if (requireType(Boolean.class, visit(ast.getCondition()))) {
+                for (Ast.Stmt stmt : ast.getThenStatements()) {
                     visit(stmt);
                 }
-            } finally {
-                scope = scope.getParent();
+            } else {
+                for (Ast.Stmt stmt : ast.getElseStatements()) {
+                    visit(stmt);
+                }
             }
+        } finally {
+            scope = scope.getParent();
         }
 
         return Environment.NIL;
