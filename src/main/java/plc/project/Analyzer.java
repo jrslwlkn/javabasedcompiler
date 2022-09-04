@@ -338,8 +338,23 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (ast.getReceiver().isPresent()) {
             Ast.Expr.Access receiver = (Ast.Expr.Access) ast.getReceiver().get();
             visit(receiver);
+
+            Environment.Function func = receiver.getType().getMethod(ast.getName(), ast.getArguments().size());
+
+            for (int i = 1; i < func.getParameterTypes().size(); ++i) {
+                visit(ast.getArguments().get(i));
+                requireType(func.getParameterTypes().get(i), ast.getArguments().get(i - 1).getType());
+            }
+
             ast.setFunction(receiver.getType().getScope().lookupFunction(ast.getName(), ast.getArguments().size() + 1));
         } else {
+            Environment.Function func = scope.lookupFunction(ast.getName(), ast.getArguments().size());
+
+            for (int i = 0; i < func.getParameterTypes().size(); ++i) {
+                visit(ast.getArguments().get(i));
+                requireType(func.getParameterTypes().get(i), ast.getArguments().get(i).getType());
+            }
+
             ast.setFunction(scope.lookupFunction(ast.getName(), ast.getArguments().size()));
         }
 
