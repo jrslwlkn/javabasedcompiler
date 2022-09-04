@@ -58,6 +58,59 @@ public class GeneratorTests {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource
+    void testMethodStatement(String test, Ast.Stmt.Method ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testMethodStatement() {
+        return Stream.of(
+                Arguments.of(
+                        "Method",
+
+                        init(new Ast.Method(
+                                        "area",
+
+                                        //parameters
+                                        Arrays.asList(
+                                                "radius"
+                                        ),
+
+                                        // parameter type names
+                                        Arrays.asList(
+                                                "Decimal"
+                                        ),
+
+                                        // return type name
+                                        Optional.of("Decimal"),
+
+                                        // method statements
+                                        Arrays.asList(
+                                                new Ast.Stmt.Return(
+                                                        new Ast.Expr.Binary(
+                                                                "*",
+                                                                new Ast.Expr.Binary(
+                                                                        "*",
+                                                                        init(new Ast.Expr.Literal(new BigDecimal("3.14")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                                                                        init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.NIL)))
+                                                                ),
+                                                                init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.NIL)))
+                                                        )
+                                                )
+                                        )
+                                ),
+                                ast -> ast.setFunction(new Environment.Function("area", "area", Arrays.asList(Environment.Type.DECIMAL), Environment.Type.DECIMAL, args -> Environment.NIL))),
+
+                        String.join(System.lineSeparator(),
+                                "double area(double radius) {",
+                                "    return 3.14 * radius * radius;",
+                                "}"
+                        )
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
     void testDeclarationStatement(String test, Ast.Stmt.Declaration ast, String expected) {
         test(ast, expected);
     }

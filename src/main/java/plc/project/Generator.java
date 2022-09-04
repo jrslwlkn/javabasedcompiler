@@ -49,10 +49,13 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(1);
             visit(field);
         }
+
+        newline(0);
         indent = 1;
         for (Ast.Method method : ast.getMethods()) {
             newline(0);
             visit(method);
+            newline(0);
         }
 
         newline(0);
@@ -79,14 +82,14 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
-        newline(indent);
+        indent();
         writer.write(ast.getFunction().getReturnType().getJvmName());
         writer.write(" ");
         writer.write(ast.getFunction().getJvmName());
         writer.write("(");
 
         for (int i = 0; i < ast.getParameters().size(); ++i) {
-            writer.write(ast.getParameterTypeNames().get(i));
+            writer.write(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName());
             writer.write(" ");
             writer.write(ast.getParameters().get(i));
             if (i < ast.getParameters().size() - 1) {
@@ -105,7 +108,6 @@ public final class Generator implements Ast.Visitor<Void> {
 
         newline(indent);
         writer.write("}");
-        newline(0);
 
         return null;
     }
