@@ -13,15 +13,10 @@ import java.util.List;
 public final class Analyzer implements Ast.Visitor<Void> {
 
     public Scope scope;
-    private Ast.Method method;
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
         scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
-    }
-
-    public Scope getScope() {
-        return scope;
     }
 
     @Override

@@ -11,39 +11,39 @@ public final class Token {
         OPERATOR
     }
 
-    private final Type type;
-    private final String literal;
-    private final int index;
+    private final Type _type;
+    private final String _literal;
+    private final int _index;
 
     public Token(Type type, String literal, int index) {
-        this.type = type;
-        this.literal = literal;
-        this.index = index;
+        _type = type;
+        _literal = literal;
+        _index = index;
     }
 
     public Type getType() {
-        return type;
+        return _type;
     }
 
     public String getLiteral() {
-        return literal;
+        return _literal;
     }
 
     public int getIndex() {
-        return index;
+        return _index;
     }
 
     @Override
     public boolean equals(Object obj) {
         return obj instanceof Token
-                && type == ((Token) obj).type
-                && literal.equals(((Token) obj).literal)
-                && index == ((Token) obj).index;
+                && _type == ((Token) obj)._type
+                && _literal.equals(((Token) obj)._literal)
+                && _index == ((Token) obj)._index;
     }
 
     @Override
     public String toString() {
-        return type + "=" + literal + "@" + index;
+        return _type + "=" + _literal + "@" + _index;
     }
 
 }

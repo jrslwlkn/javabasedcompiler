@@ -4,11 +4,11 @@ import java.io.PrintWriter;
 
 public final class Generator implements Ast.Visitor<Void> {
 
-    private final PrintWriter writer;
-    private int indent = 0;
+    private final PrintWriter _writer;
+    private int _indent = 0;
 
     public Generator(PrintWriter writer) {
-        this.writer = writer;
+        this._writer = writer;
     }
 
     private void print(Object... objects) {
@@ -16,27 +16,27 @@ public final class Generator implements Ast.Visitor<Void> {
             if (object instanceof Ast) {
                 visit((Ast) object);
             } else {
-                writer.write(object.toString());
+                _writer.write(object.toString());
             }
         }
     }
 
     private void newline(int indent) {
-        writer.println();
+        _writer.println();
         for (int i = 0; i < indent; i++) {
-            writer.write("    ");
+            _writer.write("    ");
         }
     }
 
     private void indent() {
-        for (int i = 0; i < indent; i++) {
-            writer.write("    ");
+        for (int i = 0; i < _indent; i++) {
+            _writer.write("    ");
         }
     }
 
     @Override
     public Void visit(Ast.Source ast) {
-        writer.write("public class Main {");
+        _writer.write("public class Main {");
         newline(0);
 
         for (Ast.Field field : ast.getFields()) {
@@ -49,14 +49,14 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         newline(1);
-        writer.write("public static void main(String[] args) {");
+        _writer.write("public static void main(String[] args) {");
         newline(2);
-        writer.write("System.exit(new Main().main());");
+        _writer.write("System.exit(new Main().main());");
         newline(1);
-        writer.write("}");
+        _writer.write("}");
 
         newline(0);
-        indent = 1;
+        _indent = 1;
         for (Ast.Method method : ast.getMethods()) {
             newline(0);
             visit(method);
@@ -64,23 +64,23 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         newline(0);
-        writer.write("}");
+        _writer.write("}");
 
         return null;
     }
 
     @Override
     public Void visit(Ast.Field ast) {
-        writer.write(Environment.getType(ast.getTypeName()).getJvmName());
-        writer.write(" ");
-        writer.write(ast.getName());
+        _writer.write(Environment.getType(ast.getTypeName()).getJvmName());
+        _writer.write(" ");
+        _writer.write(ast.getName());
 
         if (ast.getValue().isPresent()) {
-            writer.write(" = ");
+            _writer.write(" = ");
             visit(ast.getValue().get());
         }
 
-        writer.write(";");
+        _writer.write(";");
 
         return null;
     }
@@ -88,33 +88,33 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Method ast) {
         indent();
-        writer.write(ast.getFunction().getReturnType().getJvmName());
-        writer.write(" ");
-        writer.write(ast.getFunction().getJvmName());
-        writer.write("(");
+        _writer.write(ast.getFunction().getReturnType().getJvmName());
+        _writer.write(" ");
+        _writer.write(ast.getFunction().getJvmName());
+        _writer.write("(");
 
         for (int i = 0; i < ast.getParameters().size(); ++i) {
-            writer.write(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName());
-            writer.write(" ");
-            writer.write(ast.getParameters().get(i));
+            _writer.write(Environment.getType(ast.getParameterTypeNames().get(i)).getJvmName());
+            _writer.write(" ");
+            _writer.write(ast.getParameters().get(i));
             if (i < ast.getParameters().size() - 1) {
-                writer.write(", ");
+                _writer.write(", ");
             }
         }
 
-        writer.write(") {");
+        _writer.write(") {");
 
-        indent++;
+        _indent++;
         for (Ast.Stmt stmt : ast.getStatements()) {
             newline(0);
             visit(stmt);
         }
-        indent--;
+        _indent--;
 
         if (ast.getStatements().size() > 0) {
-            newline(indent);
+            newline(_indent);
         }
-        writer.write("}");
+        _writer.write("}");
 
         return null;
     }
@@ -123,7 +123,7 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Stmt.Expression ast) {
         indent();
         visit(ast.getExpression());
-        writer.write(";");
+        _writer.write(";");
 
         return null;
     }
@@ -131,20 +131,20 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
         if (ast.getTypeName().isPresent()) {
-            writer.write(Environment.getType(ast.getTypeName().get()).getJvmName());
+            _writer.write(Environment.getType(ast.getTypeName().get()).getJvmName());
         } else {
-            writer.write(ast.getVariable().getType().getJvmName());
+            _writer.write(ast.getVariable().getType().getJvmName());
         }
 
-        writer.write(" ");
-        writer.write(ast.getName());
+        _writer.write(" ");
+        _writer.write(ast.getName());
 
         if (ast.getValue().isPresent()) {
-            writer.write(" = ");
+            _writer.write(" = ");
             visit(ast.getValue().get());
         }
 
-        writer.write(";");
+        _writer.write(";");
 
         return null;
     }
@@ -153,9 +153,9 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Stmt.Assignment ast) {
         indent();
         visit(ast.getReceiver());
-        writer.write(" = ");
+        _writer.write(" = ");
         visit(ast.getValue());
-        writer.write(";");
+        _writer.write(";");
 
         return null;
     }
@@ -163,38 +163,38 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.If ast) {
         indent();
-        writer.write("if (");
+        _writer.write("if (");
         visit(ast.getCondition());
-        writer.write(") {");
+        _writer.write(") {");
 
         if (ast.getThenStatements().size() > 0) {
             newline(0);
         }
 
-        indent++;
+        _indent++;
         for (Ast.Stmt stmt : ast.getThenStatements()) {
             visit(stmt);
             newline(0);
         }
-        indent--;
+        _indent--;
 
         if (ast.getThenStatements().size() > 0) {
             indent();
         }
 
-        writer.write("}");
+        _writer.write("}");
 
         if (ast.getElseStatements().size() > 0) {
-            writer.write(" else {");
+            _writer.write(" else {");
             newline(0);
-            indent++;
+            _indent++;
             for (Ast.Stmt stmt : ast.getElseStatements()) {
                 visit(stmt);
                 newline(0);
             }
-            indent--;
+            _indent--;
             indent();
-            writer.write("}");
+            _writer.write("}");
         }
 
         return null;
@@ -203,23 +203,23 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.For ast) {
         indent();
-        writer.write("for (int ");
-        writer.write(ast.getName());
-        writer.write(" : ");
+        _writer.write("for (int ");
+        _writer.write(ast.getName());
+        _writer.write(" : ");
         visit(ast.getValue());
-        writer.write(") {");
+        _writer.write(") {");
 
-        indent++;
+        _indent++;
         for (Ast.Stmt stmt : ast.getStatements()) {
             newline(0);
             visit(stmt);
         }
-        indent--;
+        _indent--;
 
         if (ast.getStatements().size() > 0) {
-            newline(indent);
+            newline(_indent);
         }
-        writer.write("}");
+        _writer.write("}");
 
         return null;
     }
@@ -227,21 +227,21 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.While ast) {
         indent();
-        writer.write("while (");
+        _writer.write("while (");
         visit(ast.getCondition());
-        writer.write(") {");
+        _writer.write(") {");
 
-        indent++;
+        _indent++;
         for (Ast.Stmt stmt : ast.getStatements()) {
             newline(0);
             visit(stmt);
         }
-        indent--;
+        _indent--;
 
         if (ast.getStatements().size() > 0) {
-            newline(indent);
+            newline(_indent);
         }
-        writer.write("}");
+        _writer.write("}");
 
         return null;
     }
@@ -249,9 +249,9 @@ public final class Generator implements Ast.Visitor<Void> {
     @Override
     public Void visit(Ast.Stmt.Return ast) {
         indent();
-        writer.write("return ");
+        _writer.write("return ");
         visit(ast.getValue());
-        writer.write(";");
+        _writer.write(";");
 
         return null;
     }
@@ -260,17 +260,17 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expr.Literal ast) {
         Object value = ast.getLiteral();
         if (value instanceof String) {
-            writer.write("\"");
-            writer.write((String) value);
-            writer.write("\"");
+            _writer.write("\"");
+            _writer.write((String) value);
+            _writer.write("\"");
         } else if (value instanceof Character) {
-            writer.write("'");
-            writer.write((Character) value);
-            writer.write("'");
+            _writer.write("'");
+            _writer.write((Character) value);
+            _writer.write("'");
         } else if (value == null) {
-            writer.write("null");
+            _writer.write("null");
         } else {
-            writer.write(value.toString());
+            _writer.write(value.toString());
         }
 
         return null;
@@ -278,9 +278,9 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Expr.Group ast) {
-        writer.write("(");
+        _writer.write("(");
         visit(ast.getExpression());
-        writer.write(")");
+        _writer.write(")");
 
         return null;
     }
@@ -289,15 +289,15 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expr.Binary ast) {
         visit(ast.getLeft());
 
-        writer.write(" ");
+        _writer.write(" ");
         if (ast.getOperator().equals("AND")) {
-            writer.write("&&");
+            _writer.write("&&");
         } else if (ast.getOperator().equals("OR")) {
-            writer.write("||");
+            _writer.write("||");
         } else {
-            writer.write(ast.getOperator());
+            _writer.write(ast.getOperator());
         }
-        writer.write(" ");
+        _writer.write(" ");
 
         visit(ast.getRight());
 
@@ -308,10 +308,10 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expr.Access ast) {
         if (ast.getReceiver().isPresent()) {
             visit(ast.getReceiver().get());
-            writer.write(".");
+            _writer.write(".");
         }
 
-        writer.write(ast.getVariable().getJvmName());
+        _writer.write(ast.getVariable().getJvmName());
 
         return null;
     }
@@ -320,20 +320,20 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Expr.Function ast) {
         if (ast.getReceiver().isPresent()) {
             visit(ast.getReceiver().get());
-            writer.write(".");
+            _writer.write(".");
         }
 
-        writer.write(ast.getFunction().getJvmName());
-        writer.write("(");
+        _writer.write(ast.getFunction().getJvmName());
+        _writer.write("(");
 
         for (int i = 0; i < ast.getArguments().size(); ++i) {
             visit(ast.getArguments().get(i));
             if (i < ast.getArguments().size() - 1) {
-                writer.write(", ");
+                _writer.write(", ");
             }
         }
 
-        writer.write(")");
+        _writer.write(")");
 
         return null;
     }

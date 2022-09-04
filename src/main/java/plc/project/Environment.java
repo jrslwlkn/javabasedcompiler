@@ -13,77 +13,44 @@ public final class Environment {
 
     });
 
-    private static final Map<String, Type> TYPES = new HashMap<>();
+    private static final Map<String, Type> _types = new HashMap<>();
 
-    public static Type getType(String name) {
-        if (!TYPES.containsKey(name)) {
-            throw new RuntimeException("Unknown type " + name + ".");
-        }
-        return TYPES.get(name);
+    static {
+        registerType(Type.ANY);
+        registerType(Type.NIL);
+        registerType(Type.INTEGER_ITERABLE);
+        registerType(Type.COMPARABLE);
+        registerType(Type.BOOLEAN);
+        registerType(Type.INTEGER);
+        registerType(Type.DECIMAL);
+        registerType(Type.CHARACTER);
+        registerType(Type.STRING);
+        Type.ANY._scope.defineFunction("stringify", "toString", Arrays.asList(), Type.STRING, args -> Environment.NIL);
+        Type.COMPARABLE._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.COMPARABLE), Type.COMPARABLE, args -> Environment.NIL);
+        Type.INTEGER._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.INTEGER), Type.INTEGER, args -> Environment.NIL);
+        Type.DECIMAL._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.DECIMAL), Type.DECIMAL, args -> Environment.NIL);
+        Type.CHARACTER._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.CHARACTER), Type.CHARACTER, args -> Environment.NIL);
+        Type.STRING._scope.defineVariable("length", "length()", Type.INTEGER, Environment.NIL);
+        Type.STRING._scope.defineFunction("slice", "substring", Arrays.asList(Type.ANY, Type.INTEGER, Type.INTEGER), Type.STRING, args -> Environment.NIL);
+        Type.STRING._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.STRING), Type.STRING, args -> Environment.NIL);
     }
 
-    public static void registerType(Type type) {
-        if (TYPES.containsKey(type.getName())) {
-            throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
+    public static Type getType(String name) {
+        if (!_types.containsKey(name)) {
+            throw new RuntimeException("Unknown type " + name + ".");
         }
-        TYPES.put(type.getName(), type);
+        return _types.get(name);
     }
 
     public static PlcObject create(Object value) {
         return new PlcObject(new Scope(null), value);
     }
 
-    public static final class Type {
-
-        public static final Type ANY = new Type("Any", "Object", new Scope(null));
-        public static final Type NIL = new Type("Nil", "Void", new Scope(ANY.scope));
-        public static final Type INTEGER_ITERABLE = new Type("IntegerIterable", "Iterable<Integer>", new Scope(ANY.scope));
-        public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY.scope));
-        public static final Type BOOLEAN = new Type("Boolean", "boolean", new Scope(ANY.scope));
-        public static final Type INTEGER = new Type("Integer", "int", new Scope(COMPARABLE.scope));
-        public static final Type DECIMAL = new Type("Decimal", "double", new Scope(COMPARABLE.scope));
-        public static final Type CHARACTER = new Type("Character", "char", new Scope(COMPARABLE.scope));
-        public static final Type STRING = new Type("String", "String", new Scope(COMPARABLE.scope));
-
-        private final String name;
-        private final String jvmName;
-        private final Scope scope;
-
-        public Type(String name, String jvmName, Scope scope) {
-            this.name = name;
-            this.jvmName = jvmName;
-            this.scope = scope;
+    public static void registerType(Type type) {
+        if (_types.containsKey(type.getName())) {
+            throw new IllegalArgumentException("Duplicate registration of type " + type.getName() + ".");
         }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getJvmName() {
-            return jvmName;
-        }
-
-        public Scope getScope() {
-            return this.scope;
-        }
-
-        public Variable getField(String name) {
-            return scope.lookupVariable(name);
-        }
-
-        public Function getMethod(String name, int arity) {
-            return scope.lookupFunction(name, arity + 1);
-        }
-
-        @Override
-        public String toString() {
-            return "Type{" +
-                    "name='" + name + '\'' +
-                    ", jvmName='" + jvmName + '\'' +
-                    ", scope='" + scope + '\'' +
-                    '}';
-        }
-
+        _types.put(type.getName(), type);
     }
 
     public static final class PlcObject {
@@ -260,24 +227,57 @@ public final class Environment {
 
     }
 
-    static {
-        registerType(Type.ANY);
-        registerType(Type.NIL);
-        registerType(Type.INTEGER_ITERABLE);
-        registerType(Type.COMPARABLE);
-        registerType(Type.BOOLEAN);
-        registerType(Type.INTEGER);
-        registerType(Type.DECIMAL);
-        registerType(Type.CHARACTER);
-        registerType(Type.STRING);
-        Type.ANY.scope.defineFunction("stringify", "toString", Arrays.asList(), Type.STRING, args -> Environment.NIL);
-        Type.COMPARABLE.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.COMPARABLE), Type.COMPARABLE, args -> Environment.NIL);
-        Type.INTEGER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.INTEGER), Type.INTEGER, args -> Environment.NIL);
-        Type.DECIMAL.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.DECIMAL), Type.DECIMAL, args -> Environment.NIL);
-        Type.CHARACTER.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.CHARACTER), Type.CHARACTER, args -> Environment.NIL);
-        Type.STRING.scope.defineVariable("length", "length()", Type.INTEGER, Environment.NIL);
-        Type.STRING.scope.defineFunction("slice", "substring", Arrays.asList(Type.ANY, Type.INTEGER, Type.INTEGER), Type.STRING, args -> Environment.NIL);
-        Type.STRING.scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.STRING), Type.STRING, args -> Environment.NIL);
+    public static final class Type {
+
+        public static final Type ANY = new Type("Any", "Object", new Scope(null));
+        public static final Type NIL = new Type("Nil", "Void", new Scope(ANY._scope));
+        public static final Type INTEGER_ITERABLE = new Type("IntegerIterable", "Iterable<Integer>", new Scope(ANY._scope));
+        public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY._scope));
+        public static final Type BOOLEAN = new Type("Boolean", "boolean", new Scope(ANY._scope));
+        public static final Type INTEGER = new Type("Integer", "int", new Scope(COMPARABLE._scope));
+        public static final Type DECIMAL = new Type("Decimal", "double", new Scope(COMPARABLE._scope));
+        public static final Type CHARACTER = new Type("Character", "char", new Scope(COMPARABLE._scope));
+        public static final Type STRING = new Type("String", "String", new Scope(COMPARABLE._scope));
+
+        private final String _name;
+        private final String _jvmName;
+        private final Scope _scope;
+
+        public Type(String name, String jvmName, Scope scope) {
+            _name = name;
+            _jvmName = jvmName;
+            _scope = scope;
+        }
+
+        public String getName() {
+            return _name;
+        }
+
+        public String getJvmName() {
+            return _jvmName;
+        }
+
+        public Scope getScope() {
+            return this._scope;
+        }
+
+        public Variable getField(String name) {
+            return _scope.lookupVariable(name);
+        }
+
+        public Function getMethod(String name, int arity) {
+            return _scope.lookupFunction(name, arity + 1);
+        }
+
+        @Override
+        public String toString() {
+            return "Type{" +
+                    "name='" + _name + '\'' +
+                    ", jvmName='" + _jvmName + '\'' +
+                    ", scope='" + _scope + '\'' +
+                    '}';
+        }
+
     }
 
 }

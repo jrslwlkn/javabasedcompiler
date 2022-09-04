@@ -10,18 +10,18 @@ import java.util.function.Function;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
-    private Scope scope = new Scope(null);
+    private Scope _scope = new Scope(null);
 
     public Interpreter(Scope parent) {
-        scope = new Scope(parent);
-        scope.defineFunction("print", 1, args -> {
+        _scope = new Scope(parent);
+        _scope.defineFunction("print", 1, args -> {
             System.out.println(args.get(0).getValue());
             return Environment.NIL;
         });
     }
 
     public Scope getScope() {
-        return scope;
+        return _scope;
     }
 
     @Override
@@ -29,9 +29,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
         for (Ast.Field field : ast.getFields()) {
             if (field.getValue().isPresent()) {
-                scope.defineVariable(field.getName(), visit(field.getValue().get()));
+                _scope.defineVariable(field.getName(), visit(field.getValue().get()));
             } else {
-                scope.defineVariable(field.getName(), Environment.NIL);
+                _scope.defineVariable(field.getName(), Environment.NIL);
             }
         }
 
@@ -39,15 +39,15 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             visit(method);
         }
 
-        return scope.lookupFunction("main", 0).invoke(new ArrayList<>());
+        return _scope.lookupFunction("main", 0).invoke(new ArrayList<>());
     }
 
     @Override
     public Environment.PlcObject visit(Ast.Field ast) {
         if (ast.getValue().isPresent()) {
-            scope.defineVariable(ast.getName(), visit(ast.getValue().get()));
+            _scope.defineVariable(ast.getName(), visit(ast.getValue().get()));
         } else {
-            scope.defineVariable(ast.getName(), Environment.NIL);
+            _scope.defineVariable(ast.getName(), Environment.NIL);
         }
 
         return Environment.NIL;
@@ -56,17 +56,17 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Method ast) {
         Function<List<Environment.PlcObject>, Environment.PlcObject> func = (args) -> {
-            Scope prev = scope;
-            Scope top = scope;
+            Scope prev = _scope;
+            Scope top = _scope;
             while (top.getParent().getParent() != null) {
                 top = top.getParent();
             }
-            scope = new Scope(top);
+            _scope = new Scope(top);
             Environment.PlcObject ret = Environment.NIL;
 
             List<String> params = ast.getParameters();
             for (int i = 0; i < params.size(); i++) {
-                scope.defineVariable(params.get(i), args.get(i));
+                _scope.defineVariable(params.get(i), args.get(i));
             }
 
             try {
@@ -77,11 +77,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 ret = e.value;
             }
 
-            scope = prev;
+            _scope = prev;
             return ret;
         };
 
-        scope.defineFunction(ast.getName(), ast.getParameters().size(), func);
+        _scope.defineFunction(ast.getName(), ast.getParameters().size(), func);
         return Environment.NIL;
     }
 
@@ -95,9 +95,9 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Stmt.Declaration ast) {
         if (ast.getValue().isPresent()) {
-            scope.defineVariable(ast.getName(), visit(ast.getValue().get()));
+            _scope.defineVariable(ast.getName(), visit(ast.getValue().get()));
         } else {
-            scope.defineVariable(ast.getName(), Environment.NIL);
+            _scope.defineVariable(ast.getName(), Environment.NIL);
         }
 
         return Environment.NIL;
@@ -114,7 +114,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         if (lhs.getReceiver().isPresent()) {
             visit(lhs.getReceiver().get()).setField(lhs.getName(), value);
         } else {
-            scope.lookupVariable(lhs.getName()).setValue(value);
+            _scope.lookupVariable(lhs.getName()).setValue(value);
         }
 
         return Environment.NIL;
@@ -123,7 +123,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     @Override
     public Environment.PlcObject visit(Ast.Stmt.If ast) {
         try {
-            scope = new Scope(scope);
+            _scope = new Scope(_scope);
 
             if (requireType(Boolean.class, visit(ast.getCondition()))) {
                 for (Ast.Stmt stmt : ast.getThenStatements()) {
@@ -135,7 +135,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                 }
             }
         } finally {
-            scope = scope.getParent();
+            _scope = _scope.getParent();
         }
 
         return Environment.NIL;
@@ -146,13 +146,13 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         Iterable<Environment.PlcObject> list = requireType(Iterable.class, visit(ast.getValue()));
         for (Environment.PlcObject o : list) {
             try {
-                scope = new Scope(scope);
-                scope.defineVariable(ast.getName(), o);
+                _scope = new Scope(_scope);
+                _scope.defineVariable(ast.getName(), o);
                 for (Ast.Stmt statement : ast.getStatements()) {
                     visit(statement);
                 }
             } finally {
-                scope = scope.getParent();
+                _scope = _scope.getParent();
             }
         }
 
@@ -163,12 +163,12 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Environment.PlcObject visit(Ast.Stmt.While ast) {
         while (requireType(Boolean.class, visit(ast.getCondition()))) {
             try {
-                scope = new Scope(scope);
+                _scope = new Scope(_scope);
                 for (Ast.Stmt stmt : ast.getStatements()) {
                     visit(stmt);
                 }
             } finally {
-                scope = scope.getParent();
+                _scope = _scope.getParent();
             }
         }
 
@@ -321,7 +321,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             Environment.PlcObject receiver = visit(ast.getReceiver().get());
             return receiver.getField(ast.getName()).getValue();
         } else {
-            return scope.lookupVariable(ast.getName()).getValue();
+            return _scope.lookupVariable(ast.getName()).getValue();
         }
     }
 
@@ -336,7 +336,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
             Environment.PlcObject receiver = visit(ast.getReceiver().get());
             return receiver.callMethod(ast.getName(), arguments);
         } else {
-            return scope.lookupFunction(ast.getName(), ast.getArguments().size()).invoke(arguments);
+            return _scope.lookupFunction(ast.getName(), ast.getArguments().size()).invoke(arguments);
         }
     }
 

@@ -21,10 +21,10 @@ import java.util.Optional;
  */
 public final class ParserCompiler {
 
-    private final TokenStream tokens;
+    private final TokenStream _tokens;
 
     public ParserCompiler(List<Token> tokens) {
-        this.tokens = new TokenStream(tokens);
+        this._tokens = new TokenStream(tokens);
     }
 
     /**
@@ -35,7 +35,7 @@ public final class ParserCompiler {
         List<Ast.Method> methods = new ArrayList<>();
 
         boolean methodsStarted = false;
-        while (tokens.has(0)) {
+        while (_tokens.has(0)) {
             if (peek("LET")) {
                 if (methodsStarted) {
                     throw new ParseException("Expected: `DEF`, received: `" + getMatchedLiteral() + "`.", getMatchedIndex());
@@ -529,19 +529,19 @@ public final class ParserCompiler {
     }
 
     private String getMatchedLiteral() {
-        return tokens.get(-1).getLiteral();
+        return _tokens.get(-1).getLiteral();
     }
 
     private int getMatchedIndex() {
-        return tokens.get(-1).getIndex();
+        return _tokens.get(-1).getIndex();
     }
 
     private String getPeekedLiteral() {
-        return tokens.has(0) ? tokens.get(0).getLiteral() : "";
+        return _tokens.has(0) ? _tokens.get(0).getLiteral() : "";
     }
 
     private int getPeekedIndex() {
-        return tokens.has(0) ? tokens.get(0).getIndex() : getMatchedIndex() + getMatchedLiteral().length();
+        return _tokens.has(0) ? _tokens.get(0).getIndex() : getMatchedIndex() + getMatchedLiteral().length();
     }
 
     private String getCleanedStringValue(String rawValue) {
@@ -571,14 +571,14 @@ public final class ParserCompiler {
      */
     private boolean peek(Object... patterns) {
         for (int i = 0; i < patterns.length; ++i) {
-            if (!tokens.has(i)) {
+            if (!_tokens.has(i)) {
                 return false;
             } else if (patterns[i] instanceof Token.Type) {
-                if (patterns[i] != tokens.get(i).getType()) {
+                if (patterns[i] != _tokens.get(i).getType()) {
                     return false;
                 }
             } else if (patterns[i] instanceof String) {
-                if (!patterns[i].equals(tokens.get(i).getLiteral())) {
+                if (!patterns[i].equals(_tokens.get(i).getLiteral())) {
                     return false;
                 }
             } else {
@@ -599,7 +599,7 @@ public final class ParserCompiler {
         }
 
         for (int i = 0; i < patterns.length; ++i) {
-            tokens.advance();
+            _tokens.advance();
         }
 
         return true;
