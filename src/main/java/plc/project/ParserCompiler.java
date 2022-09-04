@@ -36,13 +36,13 @@ public final class ParserCompiler {
 
         boolean methodsStarted = false;
         while (tokens.has(0)) {
-            if (match("LET")) {
+            if (peek("LET")) {
                 if (methodsStarted) {
                     throw new ParseException("Expected: `DEF`, received: `" + getMatchedLiteral() + "`.", getMatchedIndex());
                 }
 
                 fields.add(parseField());
-            } else if (match("DEF")) {
+            } else if (peek("DEF")) { // DEF name() ...
                 methodsStarted = true;
                 methods.add(parseMethod());
             } else {
@@ -63,6 +63,8 @@ public final class ParserCompiler {
      * next tokens start a field, aka {@code LET}.
      */
     public Ast.Field parseField() throws ParseException {
+        match("LET");
+
         if (!match(Token.Type.IDENTIFIER)) {
             throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
@@ -90,6 +92,8 @@ public final class ParserCompiler {
      * next tokens start a method, aka {@code DEF}.
      */
     public Ast.Method parseMethod() throws ParseException {
+        match("DEF");
+
         if (!match(Token.Type.IDENTIFIER)) {
             throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }

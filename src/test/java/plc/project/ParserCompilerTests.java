@@ -122,6 +122,19 @@ final class ParserCompilerTests {
                                 new Token(Token.Type.OPERATOR, ";", 15)
                         ),
                         new Ast.Stmt.Declaration("name", Optional.empty(), Optional.of(new Ast.Expr.Access(Optional.empty(), "expr")))
+                ),
+                Arguments.of("Initialization 2",
+                        Arrays.asList(
+                                //LET name: Type = expr;
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, ":", 4),
+                                new Token(Token.Type.IDENTIFIER, "Type", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.IDENTIFIER, "expr", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Stmt.Declaration("name", Optional.of("Type"), Optional.of(new Ast.Expr.Access(Optional.empty(), "expr")))
                 )
         );
     }
