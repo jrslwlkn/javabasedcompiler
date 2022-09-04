@@ -57,7 +57,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     public Environment.PlcObject visit(Ast.Method ast) {
         Function<List<Environment.PlcObject>, Environment.PlcObject> func = (args) -> {
             Scope prev = scope;
-            scope = new Scope(scope);
+            Scope top = scope;
+            while (top.getParent().getParent() != null) {
+                top = top.getParent();
+            }
+            scope = new Scope(top);
             Environment.PlcObject ret = Environment.NIL;
 
             List<String> params = ast.getParameters();
