@@ -182,6 +182,50 @@ public class GeneratorTests {
                                 "    return 3.14 * radius * radius;",
                                 "}"
                         )
+                ),
+
+                Arguments.of(
+                        "Method with statements",
+
+                        init(new Ast.Method(
+                                        "method",
+                                        Arrays.asList(),
+                                        Arrays.asList(),
+                                        Optional.empty(),
+                                        Arrays.asList(
+                                                new Ast.Stmt.While(
+                                                        // condition
+                                                        init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                        // while statements
+                                                        Arrays.asList(
+                                                                new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))
+                                                        )
+                                                ),
+
+                                                new Ast.Stmt.While(
+                                                        // condition
+                                                        init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
+
+                                                        // while statements
+                                                        Arrays.asList(
+                                                                new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))
+                                                        )
+                                                )
+                                        )
+                                ),
+                                ast -> ast.setFunction(new Environment.Function("method", "method", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL))),
+
+                        String.join(System.lineSeparator(),
+                                "Void method() {",
+                                "    while (expr) {",
+                                "        stmt;",
+                                "    }",
+                                "    while (expr) {",
+                                "        stmt;",
+                                "    }",
+                                "}"
+                        )
                 )
         );
     }
@@ -511,6 +555,14 @@ public class GeneratorTests {
                         ), ast -> ast.setType(Environment.Type.BOOLEAN)),
                         "true && false"
                 ),
+                Arguments.of("Greater Than",
+                        // TRUE > FALSE
+                        init(new Ast.Expr.Binary(">",
+                                init(new Ast.Expr.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                init(new Ast.Expr.Literal(false), ast -> ast.setType(Environment.Type.BOOLEAN))
+                        ), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                        "true > false"
+                ),
                 Arguments.of("Concatenation",
                         // "Ben" + 10
                         init(new Ast.Expr.Binary("+",
@@ -518,6 +570,26 @@ public class GeneratorTests {
                                 init(new Ast.Expr.Literal(BigInteger.TEN), ast -> ast.setType(Environment.Type.INTEGER))
                         ), ast -> ast.setType(Environment.Type.STRING)),
                         "\"Ben\" + 10"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testGroupExpression(String test, Ast.Expr.Group ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testGroupExpression() {
+        return Stream.of(
+                Arguments.of("Group",
+                        // (TRUE AND FALSE)
+                        new Ast.Expr.Group(
+                                init(new Ast.Expr.Binary("AND",
+                                        init(new Ast.Expr.Literal(true), ast -> ast.setType(Environment.Type.BOOLEAN)),
+                                        init(new Ast.Expr.Literal(false), ast -> ast.setType(Environment.Type.BOOLEAN))
+                                ), ast -> ast.setType(Environment.Type.BOOLEAN))),
+                        "(true && false)"
                 )
         );
     }
@@ -546,6 +618,38 @@ public class GeneratorTests {
                                 init(new Ast.Expr.Literal(BigInteger.valueOf(5)), ast -> ast.setType(Environment.Type.INTEGER))
                         )), ast -> ast.setFunction(new Environment.Function("slice", "substring", Arrays.asList(Environment.Type.ANY, Environment.Type.INTEGER, Environment.Type.INTEGER), Environment.Type.NIL, args -> Environment.NIL))),
                         "\"string\".substring(1, 5)"
+                ),
+                Arguments.of("Empty Arguments",
+                        // "slice()
+                        init(new Ast.Expr.Function(Optional.empty(), "slice", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("slice", "substring", Arrays.asList(Environment.Type.ANY, Environment.Type.INTEGER, Environment.Type.INTEGER), Environment.Type.NIL, args -> Environment.NIL))),
+                        "substring()"
+                )
+        );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    void testLiteralExpression(String test, Ast.Expr.Literal ast, String expected) {
+        test(ast, expected);
+    }
+
+    private static Stream<Arguments> testLiteralExpression() {
+        return Stream.of(
+                Arguments.of("String",
+                        init(new Ast.Expr.Literal("string"), ast -> ast.setType(Environment.Type.STRING)),
+                        "\"string\""
+                ),
+                Arguments.of("Integer",
+                        init(new Ast.Expr.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)),
+                        "0"
+                ),
+                Arguments.of("Decimal",
+                        init(new Ast.Expr.Literal(new BigDecimal("123.456")), ast -> ast.setType(Environment.Type.DECIMAL)),
+                        "123.456"
+                ),
+                Arguments.of("Char",
+                        init(new Ast.Expr.Literal('c'), ast -> ast.setType(Environment.Type.CHARACTER)),
+                        "'c'"
                 )
         );
     }
