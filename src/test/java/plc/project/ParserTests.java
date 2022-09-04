@@ -147,7 +147,7 @@ final class ParserTests {
                 ),
                 Arguments.of("String Escape Initialization",
                         Arrays.asList(
-                                //LET name = "\n";
+                                //LET name = '\n'; // name is a Character containing a new line char
                                 new Token(Token.Type.IDENTIFIER, "LET", 0),
                                 new Token(Token.Type.IDENTIFIER, "name", 4),
                                 new Token(Token.Type.OPERATOR, "=", 9),
@@ -155,6 +155,28 @@ final class ParserTests {
                                 new Token(Token.Type.OPERATOR, ";", 15)
                         ),
                         new Ast.Stmt.Declaration("name", Optional.of(new Ast.Expr.Literal('\n')))
+                ),
+                Arguments.of("String Escape Initialization 2",
+                        Arrays.asList(
+                                //LET name = '\''; // name is a Character containing a single quote
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.CHARACTER, "'\\''", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Stmt.Declaration("name", Optional.of(new Ast.Expr.Literal('\'')))
+                ),
+                Arguments.of("String Escape Initialization 3",
+                        Arrays.asList(
+                                //LET name = '\\'; // name is a Character containing a backslash
+                                new Token(Token.Type.IDENTIFIER, "LET", 0),
+                                new Token(Token.Type.IDENTIFIER, "name", 4),
+                                new Token(Token.Type.OPERATOR, "=", 9),
+                                new Token(Token.Type.CHARACTER, "'\\\\'", 11),
+                                new Token(Token.Type.OPERATOR, ";", 15)
+                        ),
+                        new Ast.Stmt.Declaration("name", Optional.of(new Ast.Expr.Literal('\\')))
                 )
         );
     }

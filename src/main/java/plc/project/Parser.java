@@ -497,7 +497,8 @@ public final class Parser {
                 .replace("\\n", "\n")
                 .replace("\\r", "\r")
                 .replace("\\t", "\t")
-                .replace("\\", "\\")
+                .replace("\\\\", "\\")
+                .replace("\\'", "'")
                 .replace("\\\"", "\"");
     }
 
