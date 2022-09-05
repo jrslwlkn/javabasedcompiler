@@ -1,6 +1,7 @@
 package plc.project;
 
 import java.io.PrintWriter;
+import java.util.List;
 
 public final class Generator implements Ast.Visitor<Void> {
 
@@ -102,19 +103,22 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         _writer.write(") {");
+        visit(ast.getStatements());
+        _writer.write("}");
+        return null;
+    }
 
+    private void visit(List<Ast.Stmt> statements) {
         _indent++;
-        for (Ast.Stmt stmt : ast.getStatements()) {
+        for (Ast.Stmt stmt : statements) {
             newline(0);
             visit(stmt);
         }
         _indent--;
 
-        if (ast.getStatements().size() > 0) {
+        if (statements.size() > 0) {
             newline(_indent);
         }
-        _writer.write("}");
-        return null;
     }
 
     @Override
@@ -203,17 +207,7 @@ public final class Generator implements Ast.Visitor<Void> {
         _writer.write(" : ");
         visit(ast.getValue());
         _writer.write(") {");
-
-        _indent++;
-        for (Ast.Stmt stmt : ast.getStatements()) {
-            newline(0);
-            visit(stmt);
-        }
-        _indent--;
-
-        if (ast.getStatements().size() > 0) {
-            newline(_indent);
-        }
+        visit(ast.getStatements());
         _writer.write("}");
         return null;
     }
@@ -224,17 +218,7 @@ public final class Generator implements Ast.Visitor<Void> {
         _writer.write("while (");
         visit(ast.getCondition());
         _writer.write(") {");
-
-        _indent++;
-        for (Ast.Stmt stmt : ast.getStatements()) {
-            newline(0);
-            visit(stmt);
-        }
-        _indent--;
-
-        if (ast.getStatements().size() > 0) {
-            newline(_indent);
-        }
+        visit(ast.getStatements());
         _writer.write("}");
         return null;
     }
