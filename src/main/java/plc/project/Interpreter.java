@@ -10,7 +10,7 @@ import java.util.function.Function;
 
 public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
 
-    private Scope _scope = new Scope(null);
+    private Scope _scope;
 
     public Interpreter(Scope parent) {
         _scope = new Scope(parent);
@@ -74,7 +74,7 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
                     visit(stmt);
                 }
             } catch (Return e) {
-                ret = e.value;
+                ret = e._value;
             }
 
             _scope = prev;
@@ -199,119 +199,127 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         Environment.PlcObject rightResult;
         String operator = ast.getOperator();
 
-        if (operator.equals("AND")) {
-            leftResult = visit(ast.getLeft());
-            if (!requireType(Boolean.class, leftResult)) {
-                return Environment.create(false);
-            } else {
-                rightResult = visit(ast.getRight());
-                if (!requireType(Boolean.class, rightResult)) {
+        switch (operator) {
+            case "AND" -> {
+                leftResult = visit(ast.getLeft());
+                if (!requireType(Boolean.class, leftResult)) {
                     return Environment.create(false);
-                }
+                } else {
+                    rightResult = visit(ast.getRight());
+                    if (!requireType(Boolean.class, rightResult)) {
+                        return Environment.create(false);
+                    }
 
-                return Environment.create(true);
-            }
-        } else if (operator.equals("OR")) {
-            leftResult = visit(ast.getLeft());
-            if (requireType(Boolean.class, leftResult)) {
-                return Environment.create(true);
-            } else {
-                rightResult = visit(ast.getRight());
-                if (requireType(Boolean.class, rightResult)) {
                     return Environment.create(true);
                 }
-
-                return Environment.create(false);
             }
-        } else if (operator.equals("<") || operator.equals("<=") || operator.equals(">") || operator.equals(">=")) {
-            leftResult = visit(ast.getLeft());
-            rightResult = visit(ast.getRight());
-
-            Comparable<Object> lhs = (Comparable<Object>) leftResult.getValue();
-            Comparable<Object> rhs = (Comparable<Object>) requireType(lhs.getClass(), rightResult);
-
-            int result = lhs.compareTo(rhs);
-            if (result < 0 && operator.equals("<")) {
-                return Environment.create(true);
-            } else if (result <= 0 && operator.equals("<=")) {
-                return Environment.create(true);
-            } else if (result > 0 && operator.equals(">")) {
-                return Environment.create(true);
-            } else if (result >= 0 && operator.equals(">=")) {
-                return Environment.create(true);
-            } else {
-                return Environment.create(false);
-            }
-        } else if (operator.equals("==") || operator.equals("!=")) {
-            leftResult = visit(ast.getLeft());
-            rightResult = visit(ast.getRight());
-            boolean result = Objects.equals(leftResult.getValue(), rightResult.getValue());
-            if (operator.equals("!=")) {
-                result = !result;
-            }
-
-            return Environment.create(result);
-        } else if (operator.equals("+")) {
-            leftResult = visit(ast.getLeft());
-            rightResult = visit(ast.getRight());
-            Object result;
-
-            if (leftResult.getValue().getClass().equals(String.class) || rightResult.getValue().getClass().equals(String.class)) {
-                result = leftResult.getValue() + rightResult.getValue().toString();
-            } else if (leftResult.getValue().getClass().equals(BigInteger.class) && rightResult.getValue().getClass().equals(BigInteger.class)) {
-                result = ((BigInteger) leftResult.getValue()).add((BigInteger) rightResult.getValue());
-            } else if (leftResult.getValue().getClass().equals(BigDecimal.class) && rightResult.getValue().getClass().equals(BigDecimal.class)) {
-                result = ((BigDecimal) leftResult.getValue()).add((BigDecimal) rightResult.getValue());
-            } else {
-                requireType(leftResult.getValue().getClass(), rightResult);
-                throw new RuntimeException("Incompatible types for arithmetic operator");
-            }
-
-            return Environment.create(result);
-        } else if (operator.equals("-") || operator.equals("*")) {
-            leftResult = visit(ast.getLeft());
-            rightResult = visit(ast.getRight());
-            Object result;
-
-            if (leftResult.getValue().getClass().equals(BigInteger.class) && rightResult.getValue().getClass().equals(BigInteger.class)) {
-                if (operator.equals("-")) {
-                    result = ((BigInteger) leftResult.getValue()).subtract((BigInteger) rightResult.getValue());
+            case "OR" -> {
+                leftResult = visit(ast.getLeft());
+                if (requireType(Boolean.class, leftResult)) {
+                    return Environment.create(true);
                 } else {
-                    result = ((BigInteger) leftResult.getValue()).multiply((BigInteger) rightResult.getValue());
+                    rightResult = visit(ast.getRight());
+                    if (requireType(Boolean.class, rightResult)) {
+                        return Environment.create(true);
+                    }
+
+                    return Environment.create(false);
                 }
-            } else if (leftResult.getValue().getClass().equals(BigDecimal.class) && rightResult.getValue().getClass().equals(BigDecimal.class)) {
-                if (operator.equals("-")) {
-                    result = ((BigDecimal) leftResult.getValue()).subtract((BigDecimal) rightResult.getValue());
+            }
+            case "<", "<=", ">", ">=" -> {
+                leftResult = visit(ast.getLeft());
+                rightResult = visit(ast.getRight());
+
+                Comparable<Object> lhs = (Comparable<Object>) leftResult.getValue();
+                Comparable<Object> rhs = (Comparable<Object>) requireType(lhs.getClass(), rightResult);
+
+                int result = lhs.compareTo(rhs);
+                if (result < 0 && operator.equals("<")) {
+                    return Environment.create(true);
+                } else if (result <= 0 && operator.equals("<=")) {
+                    return Environment.create(true);
+                } else if (result > 0 && operator.equals(">")) {
+                    return Environment.create(true);
+                } else if (result >= 0 && operator.equals(">=")) {
+                    return Environment.create(true);
                 } else {
-                    result = ((BigDecimal) leftResult.getValue()).multiply((BigDecimal) rightResult.getValue());
+                    return Environment.create(false);
                 }
-            } else {
-                requireType(leftResult.getValue().getClass(), rightResult);
-                throw new RuntimeException("Incompatible types for arithmetic operator");
             }
-
-            return Environment.create(result);
-        } else { // divide
-            leftResult = visit(ast.getLeft());
-            rightResult = visit(ast.getRight());
-            Object result;
-
-            if (leftResult.getValue().getClass().equals(BigInteger.class) && rightResult.getValue().getClass().equals(BigInteger.class)) {
-                if (rightResult.getValue().equals(BigInteger.ZERO)) {
-                    throw new RuntimeException("Division by zero.");
+            case "==", "!=" -> {
+                leftResult = visit(ast.getLeft());
+                rightResult = visit(ast.getRight());
+                boolean result = Objects.equals(leftResult.getValue(), rightResult.getValue());
+                if (operator.equals("!=")) {
+                    result = !result;
                 }
-                result = ((BigInteger) leftResult.getValue()).divide((BigInteger) rightResult.getValue());
-            } else if (leftResult.getValue().getClass().equals(BigDecimal.class) && rightResult.getValue().getClass().equals(BigDecimal.class)) {
-                if (rightResult.getValue().equals(BigDecimal.ZERO)) {
-                    throw new RuntimeException("Division by zero.");
-                }
-                result = ((BigDecimal) leftResult.getValue()).divide((BigDecimal) rightResult.getValue(), RoundingMode.HALF_EVEN);
-            } else {
-                requireType(leftResult.getValue().getClass(), rightResult);
-                throw new RuntimeException("Incompatible types for arithmetic operator");
+
+                return Environment.create(result);
             }
+            case "+" -> {
+                leftResult = visit(ast.getLeft());
+                rightResult = visit(ast.getRight());
+                Object result;
 
-            return Environment.create(result);
+                if (leftResult.getValue().getClass().equals(String.class) || rightResult.getValue().getClass().equals(String.class)) {
+                    result = leftResult.getValue() + rightResult.getValue().toString();
+                } else if (leftResult.getValue().getClass().equals(BigInteger.class) && rightResult.getValue().getClass().equals(BigInteger.class)) {
+                    result = ((BigInteger) leftResult.getValue()).add((BigInteger) rightResult.getValue());
+                } else if (leftResult.getValue().getClass().equals(BigDecimal.class) && rightResult.getValue().getClass().equals(BigDecimal.class)) {
+                    result = ((BigDecimal) leftResult.getValue()).add((BigDecimal) rightResult.getValue());
+                } else {
+                    requireType(leftResult.getValue().getClass(), rightResult);
+                    throw new RuntimeException("Incompatible types for arithmetic operator");
+                }
+
+                return Environment.create(result);
+            }
+            case "-", "*" -> {
+                leftResult = visit(ast.getLeft());
+                rightResult = visit(ast.getRight());
+                Object result;
+
+                if (leftResult.getValue().getClass().equals(BigInteger.class) && rightResult.getValue().getClass().equals(BigInteger.class)) {
+                    if (operator.equals("-")) {
+                        result = ((BigInteger) leftResult.getValue()).subtract((BigInteger) rightResult.getValue());
+                    } else {
+                        result = ((BigInteger) leftResult.getValue()).multiply((BigInteger) rightResult.getValue());
+                    }
+                } else if (leftResult.getValue().getClass().equals(BigDecimal.class) && rightResult.getValue().getClass().equals(BigDecimal.class)) {
+                    if (operator.equals("-")) {
+                        result = ((BigDecimal) leftResult.getValue()).subtract((BigDecimal) rightResult.getValue());
+                    } else {
+                        result = ((BigDecimal) leftResult.getValue()).multiply((BigDecimal) rightResult.getValue());
+                    }
+                } else {
+                    requireType(leftResult.getValue().getClass(), rightResult);
+                    throw new RuntimeException("Incompatible types for arithmetic operator");
+                }
+
+                return Environment.create(result);
+            }
+            default -> { // divide
+                leftResult = visit(ast.getLeft());
+                rightResult = visit(ast.getRight());
+                Object result;
+
+                if (leftResult.getValue().getClass().equals(BigInteger.class) && rightResult.getValue().getClass().equals(BigInteger.class)) {
+                    if (rightResult.getValue().equals(BigInteger.ZERO)) {
+                        throw new RuntimeException("Division by zero.");
+                    }
+                    result = ((BigInteger) leftResult.getValue()).divide((BigInteger) rightResult.getValue());
+                } else if (leftResult.getValue().getClass().equals(BigDecimal.class) && rightResult.getValue().getClass().equals(BigDecimal.class)) {
+                    if (rightResult.getValue().equals(BigDecimal.ZERO)) {
+                        throw new RuntimeException("Division by zero.");
+                    }
+                    result = ((BigDecimal) leftResult.getValue()).divide((BigDecimal) rightResult.getValue(), RoundingMode.HALF_EVEN);
+                } else {
+                    requireType(leftResult.getValue().getClass(), rightResult);
+                    throw new RuntimeException("Incompatible types for arithmetic operator");
+                }
+
+                return Environment.create(result);
+            }
         }
     }
 
@@ -356,10 +364,10 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
      */
     private static class Return extends RuntimeException {
 
-        private final Environment.PlcObject value;
+        private final Environment.PlcObject _value;
 
         private Return(Environment.PlcObject value) {
-            this.value = value;
+            _value = value;
         }
 
     }

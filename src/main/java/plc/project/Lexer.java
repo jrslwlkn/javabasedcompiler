@@ -215,7 +215,7 @@ public final class Lexer {
         private int _length = 0;
 
         public CharStream(String input) {
-            this._input = input;
+            _input = input;
         }
 
         public boolean has(int offset) {

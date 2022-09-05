@@ -8,7 +8,7 @@ public final class Generator implements Ast.Visitor<Void> {
     private int _indent = 0;
 
     public Generator(PrintWriter writer) {
-        this._writer = writer;
+        _writer = writer;
     }
 
     private void print(Object... objects) {
@@ -65,7 +65,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
         newline(0);
         _writer.write("}");
-
+        _writer.flush();
         return null;
     }
 
@@ -81,7 +81,6 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         _writer.write(";");
-
         return null;
     }
 
@@ -115,7 +114,6 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(_indent);
         }
         _writer.write("}");
-
         return null;
     }
 
@@ -124,7 +122,6 @@ public final class Generator implements Ast.Visitor<Void> {
         indent();
         visit(ast.getExpression());
         _writer.write(";");
-
         return null;
     }
 
@@ -146,7 +143,6 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         _writer.write(";");
-
         return null;
     }
 
@@ -157,7 +153,6 @@ public final class Generator implements Ast.Visitor<Void> {
         _writer.write(" = ");
         visit(ast.getValue());
         _writer.write(";");
-
         return null;
     }
 
@@ -197,7 +192,6 @@ public final class Generator implements Ast.Visitor<Void> {
             indent();
             _writer.write("}");
         }
-
         return null;
     }
 
@@ -221,7 +215,6 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(_indent);
         }
         _writer.write("}");
-
         return null;
     }
 
@@ -243,7 +236,6 @@ public final class Generator implements Ast.Visitor<Void> {
             newline(_indent);
         }
         _writer.write("}");
-
         return null;
     }
 
@@ -253,7 +245,6 @@ public final class Generator implements Ast.Visitor<Void> {
         _writer.write("return ");
         visit(ast.getValue());
         _writer.write(";");
-
         return null;
     }
 
@@ -273,7 +264,6 @@ public final class Generator implements Ast.Visitor<Void> {
         } else {
             _writer.write(value.toString());
         }
-
         return null;
     }
 
@@ -282,7 +272,6 @@ public final class Generator implements Ast.Visitor<Void> {
         _writer.write("(");
         visit(ast.getExpression());
         _writer.write(")");
-
         return null;
     }
 
@@ -301,7 +290,6 @@ public final class Generator implements Ast.Visitor<Void> {
         _writer.write(" ");
 
         visit(ast.getRight());
-
         return null;
     }
 
@@ -313,7 +301,6 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         _writer.write(ast.getVariable().getJvmName());
-
         return null;
     }
 
@@ -335,7 +322,6 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         _writer.write(")");
-
         return null;
     }
 

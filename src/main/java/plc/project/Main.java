@@ -8,7 +8,10 @@ public class Main {
         try {
             var source = """
                     DEF main() DO
-                       LET a1 : Integer;
+                       LET a1 = 1;
+                       WHILE a1 <= 100 DO
+                            a1 = a1 + 1;
+                       END
                     END
                     """;
             var lexer = new Lexer(source);

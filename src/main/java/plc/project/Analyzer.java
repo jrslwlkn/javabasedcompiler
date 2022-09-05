@@ -34,7 +34,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (main == null) {
             throw new RuntimeException("main() is not defined.");
         }
-
         return null;
     }
 
@@ -49,6 +48,33 @@ public final class Analyzer implements Ast.Visitor<Void> {
         return null;
     }
 
+    public static void requireAssignable(Environment.Type target, Environment.Type source) {
+        String _target = target.getName();
+        String _source = source.getName();
+        if (_target.equals("Any")) {
+            return;
+        }
+        if (_target.equals("Comparable")) {
+            if (_source.equals("Integer") || _source.equals("Decimal") || _source.equals("Character") || _source.equals("String")) {
+                return;
+            }
+        }
+        if (_target.equals(_source)) {
+            return;
+        }
+        throw new RuntimeException("Specified type does not match the target type.");
+    }
+
+    @Override
+    public Void visit(Ast.Stmt.Expression ast) {
+        if (!(ast.getExpression() instanceof Ast.Expr.Function)) {
+            throw new RuntimeException("Expression statement is not a Function.");
+        }
+
+        visit(ast.getExpression());
+        return null;
+    }
+
     @Override
     public Void visit(Ast.Method ast) {
         List<Environment.Type> paramTypes = new ArrayList<>();
@@ -56,7 +82,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
             paramTypes.add(scope.lookupVariable(param).getType());
         }
 
-        Environment.Type retType;
+        Environment.Type retType = null;
         if (ast.getReturnTypeName().isEmpty()) {
             retType = Environment.Type.NIL;
         } else if (ast.getReturnTypeName().get().equals("Boolean")) {
@@ -69,8 +95,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
             retType = Environment.Type.CHARACTER;
         } else if (ast.getReturnTypeName().get().equals("Decimal")) {
             retType = Environment.Type.DECIMAL;
-        } else {
-            retType = Environment.Type.NIL;
         }
 
         scope.defineFunction(ast.getName(), ast.getName(), paramTypes, retType, plcObjects -> Environment.NIL);
@@ -90,40 +114,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         }
 
         ast.setFunction(scope.lookupFunction(ast.getName(), ast.getParameters().size()));
-        return null;
-    }
-
-    @Override
-    public Void visit(Ast.Stmt.Expression ast) {
-        if (!(ast.getExpression() instanceof Ast.Expr.Function)) {
-            throw new RuntimeException("Expression statement is not a Function.");
-        }
-
-        visit(ast.getExpression());
-        return null;
-    }
-
-    @Override
-    public Void visit(Ast.Stmt.Declaration ast) {
-        if (ast.getTypeName().isEmpty() && ast.getValue().isEmpty()) {
-            throw new RuntimeException("Declaration specifies neither type nor value.");
-        }
-
-        Environment.Type type = null;
-        if (ast.getTypeName().isPresent()) {
-            type = Environment.getType(ast.getTypeName().get());
-        }
-        if (ast.getValue().isPresent()) {
-            visit(ast.getValue().get());
-
-            if (type == null) {
-                type = ast.getValue().get().getType();
-            }
-
-            requireAssignable(type, ast.getValue().get().getType());
-        }
-
-        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL));
         return null;
     }
 
@@ -222,31 +212,23 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         if (literal == null) {
             type = Environment.Type.NIL;
-
         } else if (literal instanceof BigInteger) {
             if (((BigInteger) literal).compareTo(BigInteger.valueOf(Integer.MIN_VALUE)) < 0 || ((BigInteger) literal).compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) > 0) {
                 throw new RuntimeException("The value is out of the Integer range.");
             }
-
             type = Environment.Type.INTEGER;
-
         } else if (literal instanceof BigDecimal) {
             double temp = ((BigDecimal) literal).doubleValue();
             if (temp == Double.NEGATIVE_INFINITY || temp == Double.POSITIVE_INFINITY) {
                 throw new RuntimeException("The value is out of the Decimal range.");
             }
-
             type = Environment.Type.DECIMAL;
-
         } else if (literal instanceof String) {
             type = Environment.Type.STRING;
-
         } else if (literal instanceof Character) {
             type = Environment.Type.CHARACTER;
-
         } else if (literal instanceof Boolean) {
             type = Environment.Type.BOOLEAN;
-
         }
 
         ast.setType(type);
@@ -261,71 +243,30 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         visit(ast.getExpression());
         ast.setType(ast.getExpression().getType());
-
         return null;
     }
 
     @Override
-    public Void visit(Ast.Expr.Binary ast) {
-        String op = ast.getOperator();
-        Ast.Expr lhs = ast.getLeft();
-        Ast.Expr rhs = ast.getRight();
-        visit(lhs);
-        visit(rhs);
-
-        switch (op) {
-            case "AND":
-            case "OR":
-                requireType(Environment.Type.BOOLEAN, lhs.getType());
-                requireType(Environment.Type.BOOLEAN, rhs.getType());
-
-                ast.setType(Environment.Type.BOOLEAN);
-
-                break;
-            case "<":
-            case "<=":
-            case ">":
-            case ">=":
-            case "==":
-            case "!=":
-                requireType(Environment.Type.COMPARABLE, lhs.getType());
-                requireType(Environment.Type.COMPARABLE, rhs.getType());
-                requireType(rhs.getType(), lhs.getType());
-
-                ast.setType(Environment.Type.BOOLEAN);
-
-                break;
-            case "+":
-                if (lhs.getType().getName().equals("String") || rhs.getType().getName().equals("String")) {
-                    ast.setType(Environment.Type.STRING);
-
-                } else if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
-                    requireType(lhs.getType(), rhs.getType());
-
-                    ast.setType(lhs.getType());
-
-                } else {
-                    throw new RuntimeException(lhs.getType() + " does not support operator `+`.");
-
-                }
-                break;
-            case "-":
-            case "*":
-            case "/":
-                if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
-                    requireType(lhs.getType(), rhs.getType());
-
-                    ast.setType(lhs.getType());
-
-                } else {
-                    throw new RuntimeException(lhs.getType() + " does not support operator `-`.");
-
-                }
-                break;
-            default:
-                throw new RuntimeException(lhs.getType() + " does not support operator " + op + ".");
+    public Void visit(Ast.Stmt.Declaration ast) {
+        if (ast.getTypeName().isEmpty() && ast.getValue().isEmpty()) {
+            throw new RuntimeException("Declaration specifies neither Type nor Value.");
         }
 
+        Environment.Type type = null;
+        if (ast.getTypeName().isPresent()) {
+            type = Environment.getType(ast.getTypeName().get());
+        }
+        if (ast.getValue().isPresent()) {
+            visit(ast.getValue().get());
+
+            if (type == null) {
+                type = ast.getValue().get().getType();
+            }
+
+            requireAssignable(type, ast.getValue().get().getType());
+        }
+
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), type, Environment.NIL));
         return null;
     }
 
@@ -338,7 +279,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
         } else {
             ast.setVariable(scope.lookupVariable(ast.getName()));
         }
-
         return null;
     }
 
@@ -366,25 +306,62 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
             ast.setFunction(scope.lookupFunction(ast.getName(), ast.getArguments().size()));
         }
-
         return null;
     }
 
-    public static void requireAssignable(Environment.Type target, Environment.Type type) {
-        String _target = target.getName();
-        String _type = type.getName();
-        if (_target.equals("Any")) {
-            return;
+    @Override
+    public Void visit(Ast.Expr.Binary ast) {
+        String op = ast.getOperator();
+        Ast.Expr lhs = ast.getLeft();
+        Ast.Expr rhs = ast.getRight();
+        visit(lhs);
+        visit(rhs);
+
+        switch (op) {
+            case "AND":
+            case "OR":
+                requireType(Environment.Type.BOOLEAN, lhs.getType());
+                requireType(Environment.Type.BOOLEAN, rhs.getType());
+                ast.setType(Environment.Type.BOOLEAN);
+                break;
+
+            case "<":
+            case "<=":
+            case ">":
+            case ">=":
+            case "==":
+            case "!=":
+                requireType(Environment.Type.COMPARABLE, lhs.getType());
+                requireType(Environment.Type.COMPARABLE, rhs.getType());
+                requireType(rhs.getType(), lhs.getType());
+                ast.setType(Environment.Type.BOOLEAN);
+                break;
+
+            case "+":
+                if (lhs.getType().getName().equals("String") || rhs.getType().getName().equals("String")) {
+                    ast.setType(Environment.Type.STRING);
+                } else if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
+                    requireType(lhs.getType(), rhs.getType());
+                    ast.setType(lhs.getType());
+                } else {
+                    throw new RuntimeException(lhs.getType() + " does not support operator `+`.");
+                }
+                break;
+
+            case "-":
+            case "*":
+            case "/":
+                if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
+                    requireType(lhs.getType(), rhs.getType());
+                    ast.setType(lhs.getType());
+                } else {
+                    throw new RuntimeException(lhs.getType() + " does not support operator `-`.");
+                }
+                break;
+            default:
+                throw new RuntimeException(lhs.getType() + " does not support operator " + op + ".");
         }
-        if (_target.equals("Comparable")) {
-            if (_type.equals("Integer") || _type.equals("Decimal") || _type.equals("Character") || _type.equals("String")) {
-                return;
-            }
-        }
-        if (_target.equals(_type)) {
-            return;
-        }
-        throw new RuntimeException("Specified type does not match the target type.");
+        return null;
     }
 
     private static void requireType(Environment.Type required, Environment.Type given) {
