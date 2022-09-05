@@ -25,7 +25,7 @@ public final class Environment {
         registerType(Type.DECIMAL);
         registerType(Type.CHARACTER);
         registerType(Type.STRING);
-        Type.ANY._scope.defineFunction("stringify", "toString", Arrays.asList(), Type.STRING, args -> Environment.NIL);
+        Type.ANY._scope.defineFunction("stringify", "toString", List.of(), Type.STRING, args -> Environment.NIL);
         Type.COMPARABLE._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.COMPARABLE), Type.COMPARABLE, args -> Environment.NIL);
         Type.INTEGER._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.INTEGER), Type.INTEGER, args -> Environment.NIL);
         Type.DECIMAL._scope.defineFunction("compare", "compareTo", Arrays.asList(Type.ANY, Type.DECIMAL), Type.DECIMAL, args -> Environment.NIL);
