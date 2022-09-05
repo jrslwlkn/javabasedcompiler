@@ -130,6 +130,7 @@ public final class Generator implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
+        indent();
         if (ast.getTypeName().isPresent()) {
             _writer.write(Environment.getType(ast.getTypeName().get()).getJvmName());
         } else {
