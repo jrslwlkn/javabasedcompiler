@@ -3,7 +3,6 @@ package plc.project;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -16,7 +15,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     public Analyzer(Scope parent) {
         scope = new Scope(parent);
-        scope.defineFunction("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
+        scope.defineFunction("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL);
     }
 
     @Override
@@ -32,7 +31,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 main = method;
             }
         }
-        if (main == null || !main.getReturnTypeName().isPresent() || !main.getReturnTypeName().get().equals("Integer")) {
+        if (main == null) {
             throw new RuntimeException("main() is not defined.");
         }
 
@@ -57,8 +56,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             paramTypes.add(scope.lookupVariable(param).getType());
         }
 
-        Environment.Type retType = null;
-        if (!ast.getReturnTypeName().isPresent()) {
+        Environment.Type retType;
+        if (ast.getReturnTypeName().isEmpty()) {
             retType = Environment.Type.NIL;
         } else if (ast.getReturnTypeName().get().equals("Boolean")) {
             retType = Environment.Type.BOOLEAN;
@@ -70,6 +69,8 @@ public final class Analyzer implements Ast.Visitor<Void> {
             retType = Environment.Type.CHARACTER;
         } else if (ast.getReturnTypeName().get().equals("Decimal")) {
             retType = Environment.Type.DECIMAL;
+        } else {
+            retType = Environment.Type.NIL;
         }
 
         scope.defineFunction(ast.getName(), ast.getName(), paramTypes, retType, plcObjects -> Environment.NIL);
@@ -81,7 +82,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 if (statement instanceof Ast.Stmt.Return) {
                     ((Ast.Stmt.Return) statement).getValue().getType().getScope().defineVariable("!ret", "!ret", ast.getFunction().getReturnType(), Environment.NIL);
                 }
-                visit(statement);
             }
         } finally {
             if (!ast.getStatements().isEmpty()) {
@@ -105,7 +105,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Declaration ast) {
-        if (!ast.getTypeName().isPresent() && !ast.getValue().isPresent()) {
+        if (ast.getTypeName().isEmpty() && ast.getValue().isEmpty()) {
             throw new RuntimeException("Declaration specifies neither type nor value.");
         }
 
@@ -273,44 +273,57 @@ public final class Analyzer implements Ast.Visitor<Void> {
         visit(lhs);
         visit(rhs);
 
-        if (op.equals("AND") || op.equals("OR")) {
-            requireType(Environment.Type.BOOLEAN, lhs.getType());
-            requireType(Environment.Type.BOOLEAN, rhs.getType());
+        switch (op) {
+            case "AND":
+            case "OR":
+                requireType(Environment.Type.BOOLEAN, lhs.getType());
+                requireType(Environment.Type.BOOLEAN, rhs.getType());
 
-            ast.setType(Environment.Type.BOOLEAN);
+                ast.setType(Environment.Type.BOOLEAN);
 
-        } else if (op.equals("<") || op.equals("<=") || op.equals(">") || op.equals(">=") || op.equals("==") || op.equals("!=")) {
-            requireType(Environment.Type.COMPARABLE, lhs.getType());
-            requireType(Environment.Type.COMPARABLE, rhs.getType());
-            requireType(rhs.getType(), lhs.getType());
+                break;
+            case "<":
+            case "<=":
+            case ">":
+            case ">=":
+            case "==":
+            case "!=":
+                requireType(Environment.Type.COMPARABLE, lhs.getType());
+                requireType(Environment.Type.COMPARABLE, rhs.getType());
+                requireType(rhs.getType(), lhs.getType());
 
-            ast.setType(Environment.Type.BOOLEAN);
+                ast.setType(Environment.Type.BOOLEAN);
 
-        } else if (op.equals("+")) {
-            if (lhs.getType().getName().equals("String") || rhs.getType().getName().equals("String")) {
-                ast.setType(Environment.Type.STRING);
+                break;
+            case "+":
+                if (lhs.getType().getName().equals("String") || rhs.getType().getName().equals("String")) {
+                    ast.setType(Environment.Type.STRING);
 
-            } else if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
-                requireType(lhs.getType(), rhs.getType());
+                } else if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
+                    requireType(lhs.getType(), rhs.getType());
 
-                ast.setType(lhs.getType());
+                    ast.setType(lhs.getType());
 
-            } else {
-                throw new RuntimeException(lhs.getType() + " does not support operator `+`.");
+                } else {
+                    throw new RuntimeException(lhs.getType() + " does not support operator `+`.");
 
-            }
-        } else if (op.equals("-") || op.equals("*") || op.equals("/")) {
-            if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
-                requireType(lhs.getType(), rhs.getType());
+                }
+                break;
+            case "-":
+            case "*":
+            case "/":
+                if (lhs.getType().getName().equals("Integer") || lhs.getType().getName().equals("Decimal")) {
+                    requireType(lhs.getType(), rhs.getType());
 
-                ast.setType(lhs.getType());
+                    ast.setType(lhs.getType());
 
-            } else {
-                throw new RuntimeException(lhs.getType() + " does not support operator `-`.");
+                } else {
+                    throw new RuntimeException(lhs.getType() + " does not support operator `-`.");
 
-            }
-        } else {
-            throw new RuntimeException(lhs.getType() + " does not support operator " + op + ".");
+                }
+                break;
+            default:
+                throw new RuntimeException(lhs.getType() + " does not support operator " + op + ".");
         }
 
         return null;
