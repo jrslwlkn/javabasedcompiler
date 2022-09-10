@@ -22,6 +22,7 @@ public final class Lexer {
     private final CharStream _chars;
 
     private final String WHITESPACE = "[ \b\n\r\t]";
+    private final String BANG = "!";
     private final String IDENTIFIER_START = "[A-Za-z_]";
     private final String IDENTIFIER_END = "[A-Za-z0-9_-]";
     private final String NUMBER_SIGN = "[+-]";
@@ -52,6 +53,8 @@ public final class Lexer {
         while (_chars.has(0)) {
             if (peek(WHITESPACE)) {
                 lexEscape();
+            } else if (peek(BANG, BANG, BANG)) {
+                lexComment();
             } else {
                 tokens.add(lexToken());
             }
@@ -157,6 +160,17 @@ public final class Lexer {
     public void lexEscape() {
         match(WHITESPACE);
         _chars.skip();
+    }
+
+    public void lexComment() {
+        while (true) {
+            if (match("\n") || !_chars.has(0)) {
+                _chars.skip();
+                break;
+            }
+            match(".*");
+            _chars.skip();
+        }
     }
 
     public Token lexOperator() {

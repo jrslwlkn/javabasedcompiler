@@ -24,7 +24,7 @@ public final class ParserCompiler {
     private final TokenStream _tokens;
 
     public ParserCompiler(List<Token> tokens) {
-        this._tokens = new TokenStream(tokens);
+        _tokens = new TokenStream(tokens);
     }
 
     /**
@@ -79,9 +79,6 @@ public final class ParserCompiler {
         Ast.Expr value = null;
         if (match("=")) {
             value = parseExpression();
-        }
-        if (!match(";")) {
-            throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
         return new Ast.Field(name, type, value == null ? Optional.empty() : Optional.of(value));
@@ -171,10 +168,6 @@ public final class ParserCompiler {
             assignment = new Ast.Stmt.Assignment(receiver, parseExpression());
         }
 
-        if (!match(";")) {
-            throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
-        }
-
         return assignment == null ? new Ast.Stmt.Expression(receiver) : assignment;
     }
 
@@ -204,10 +197,7 @@ public final class ParserCompiler {
         if (match("=")) {
             expression = Optional.of(parseExpression());
         }
-
-        if (!match(";")) {
-            throw new ParseException("Expected: `;`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
-        } else if (!type.isPresent() && !expression.isPresent()) {
+        if (type.isEmpty() && expression.isEmpty()) {
             throw new ParseException("Expected: Value or Type declaration, received: `" + getMatchedLiteral() + "`.", getMatchedIndex());
         }
 
@@ -313,14 +303,7 @@ public final class ParserCompiler {
      */
     public Ast.Stmt.Return parseReturnStatement() throws ParseException {
         match("RETURN");
-
-        Ast.Stmt.Return ret = new Ast.Stmt.Return(parseExpression());
-
-        if (!match(";")) {
-            throw new ParseException("Missing `;` in Return statement.", getPeekedIndex());
-        }
-
-        return ret;
+        return new Ast.Stmt.Return(parseExpression());
     }
 
     /**

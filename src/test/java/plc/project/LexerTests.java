@@ -114,11 +114,32 @@ public class LexerTests {
         );
     }
 
-    @ParameterizedTest
-    @MethodSource
-    void testOperator(String test, String input, boolean success) {
-        //this test requires our lex() method, since that's where whitespace is handled.
-        test(input, Arrays.asList(new Token(Token.Type.OPERATOR, input, 0)), success);
+    private static Stream<Arguments> testExamples() {
+        return Stream.of(
+                Arguments.of("Example 1", "LET x = 5 !!! hello comment", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "LET", 0),
+                        new Token(Token.Type.IDENTIFIER, "x", 4),
+                        new Token(Token.Type.OPERATOR, "=", 6),
+                        new Token(Token.Type.INTEGER, "5", 8)
+                )),
+                Arguments.of("Example 2", "print(\"Hello, World!\")", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "print", 0),
+                        new Token(Token.Type.OPERATOR, "(", 5),
+                        new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
+                        new Token(Token.Type.OPERATOR, ")", 21)
+                )),
+                Arguments.of("Example 3", "const abc = +( a > b\n)\n\r", Arrays.asList(
+                        new Token(Token.Type.IDENTIFIER, "const", 0),
+                        new Token(Token.Type.IDENTIFIER, "abc", 6),
+                        new Token(Token.Type.OPERATOR, "=", 10),
+                        new Token(Token.Type.OPERATOR, "+", 12),
+                        new Token(Token.Type.OPERATOR, "(", 13),
+                        new Token(Token.Type.IDENTIFIER, "a", 15),
+                        new Token(Token.Type.OPERATOR, ">", 17),
+                        new Token(Token.Type.IDENTIFIER, "b", 19),
+                        new Token(Token.Type.OPERATOR, ")", 21)
+                ))
+        );
     }
 
     private static Stream<Arguments> testOperator() {
@@ -138,34 +159,11 @@ public class LexerTests {
         test(input, expected, true);
     }
 
-    private static Stream<Arguments> testExamples() {
-        return Stream.of(
-                Arguments.of("Example 1", "LET x = 5;", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "LET", 0),
-                        new Token(Token.Type.IDENTIFIER, "x", 4),
-                        new Token(Token.Type.OPERATOR, "=", 6),
-                        new Token(Token.Type.INTEGER, "5", 8),
-                        new Token(Token.Type.OPERATOR, ";", 9)
-                )),
-                Arguments.of("Example 2", "print(\"Hello, World!\");", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "print", 0),
-                        new Token(Token.Type.OPERATOR, "(", 5),
-                        new Token(Token.Type.STRING, "\"Hello, World!\"", 6),
-                        new Token(Token.Type.OPERATOR, ")", 21),
-                        new Token(Token.Type.OPERATOR, ";", 22)
-                )),
-                Arguments.of("Example 3", "const abc = +( a > b\n)\n\r", Arrays.asList(
-                        new Token(Token.Type.IDENTIFIER, "const", 0),
-                        new Token(Token.Type.IDENTIFIER, "abc", 6),
-                        new Token(Token.Type.OPERATOR, "=", 10),
-                        new Token(Token.Type.OPERATOR, "+", 12),
-                        new Token(Token.Type.OPERATOR, "(", 13),
-                        new Token(Token.Type.IDENTIFIER, "a", 15),
-                        new Token(Token.Type.OPERATOR, ">", 17),
-                        new Token(Token.Type.IDENTIFIER, "b", 19),
-                        new Token(Token.Type.OPERATOR, ")", 21)
-                ))
-        );
+    @ParameterizedTest
+    @MethodSource
+    void testOperator(String test, String input, boolean success) {
+        //this test requires our lex() method, since that's where whitespace is handled.
+        test(input, List.of(new Token(Token.Type.OPERATOR, input, 0)), success);
     }
 
     @Test
