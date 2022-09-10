@@ -303,7 +303,7 @@ public abstract class Ast {
             }
 
             @Override
-            public final String toString() {
+            public String toString() {
                 return "Ast.Stmt.Assignment{" +
                         "receiver=" + _receiver +
                         ", value=" + _value +
@@ -515,7 +515,7 @@ public abstract class Ast {
             private Environment.Type _type = null;
 
             public Group(Expr expression) {
-                this._expression = expression;
+                _expression = expression;
             }
 
             public Expr getExpression() {
@@ -531,7 +531,7 @@ public abstract class Ast {
             }
 
             public void setType(Environment.Type type) {
-                this._type = type;
+                _type = type;
             }
 
             @Override
@@ -556,7 +556,7 @@ public abstract class Ast {
             private final String _operator;
             private final Expr _left;
             private final Expr _right;
-            private Environment.Type type = null;
+            private Environment.Type _type = null;
 
             public Binary(String operator, Expr left, Expr right) {
                 _operator = operator;
@@ -578,14 +578,14 @@ public abstract class Ast {
 
             @Override
             public Environment.Type getType() {
-                if (type == null) {
+                if (_type == null) {
                     throw new IllegalStateException("type is uninitialized");
                 }
-                return type;
+                return _type;
             }
 
             public void setType(Environment.Type type) {
-                this.type = type;
+                _type = type;
             }
 
             @Override
@@ -594,7 +594,7 @@ public abstract class Ast {
                         _operator.equals(((Binary) obj)._operator) &&
                         _left.equals(((Binary) obj)._left) &&
                         _right.equals(((Binary) obj)._right) &&
-                        Objects.equals(type, ((Binary) obj).type);
+                        Objects.equals(_type, ((Binary) obj)._type);
             }
 
             @Override
@@ -603,7 +603,7 @@ public abstract class Ast {
                         "operator='" + _operator + '\'' +
                         ", left=" + _left +
                         ", right=" + _right +
-                        ", type=" + type +
+                        ", type=" + _type +
                         '}';
             }
 
@@ -616,8 +616,8 @@ public abstract class Ast {
             private Environment.Variable _variable = null;
 
             public Access(Optional<Expr> receiver, String name) {
-                this._receiver = receiver;
-                this._name = name;
+                _receiver = receiver;
+                _name = name;
             }
 
             public Optional<Expr> getReceiver() {
@@ -636,7 +636,7 @@ public abstract class Ast {
             }
 
             public void setVariable(Environment.Variable variable) {
-                this._variable = variable;
+                _variable = variable;
             }
 
             @Override
@@ -671,9 +671,9 @@ public abstract class Ast {
             private Environment.Function _function = null;
 
             public Function(Optional<Expr> receiver, String name, List<Expr> arguments) {
-                this._receiver = receiver;
-                this._name = name;
-                this._arguments = arguments;
+                _receiver = receiver;
+                _name = name;
+                _arguments = arguments;
             }
 
             public Optional<Expr> getReceiver() {
@@ -696,7 +696,7 @@ public abstract class Ast {
             }
 
             public void setFunction(Environment.Function function) {
-                this._function = function;
+                _function = function;
             }
 
             @Override
