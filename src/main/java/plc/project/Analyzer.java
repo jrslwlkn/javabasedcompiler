@@ -73,24 +73,20 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Method ast) {
+        scope = new Scope(scope);
         List<Environment.Type> paramTypes = new ArrayList<>();
-        for (String param : ast.getParameters()) {
-            paramTypes.add(scope.lookupVariable(param).getType());
+        for (int i = 0; i < ast.getParameters().size(); ++i) {
+            var param = ast.getParameters().get(i);
+            var type = Environment.getType(ast.getParameterTypeNames().get(i));
+            scope.defineVariable(param, param, type, Environment.NIL);
+            paramTypes.add(type);
         }
 
-        Environment.Type retType = null;
+        Environment.Type retType;
         if (ast.getReturnTypeName().isEmpty()) {
             retType = Environment.Type.NIL;
-        } else if (ast.getReturnTypeName().get().equals("Boolean")) {
-            retType = Environment.Type.BOOLEAN;
-        } else if (ast.getReturnTypeName().get().equals("Integer")) {
-            retType = Environment.Type.INTEGER;
-        } else if (ast.getReturnTypeName().get().equals("String")) {
-            retType = Environment.Type.STRING;
-        } else if (ast.getReturnTypeName().get().equals("Character")) {
-            retType = Environment.Type.CHARACTER;
-        } else if (ast.getReturnTypeName().get().equals("Decimal")) {
-            retType = Environment.Type.DECIMAL;
+        } else {
+            retType = Environment.getType(ast.getReturnTypeName().get());
         }
 
         scope.defineFunction(ast.getName(), ast.getName(), paramTypes, retType, plcObjects -> Environment.NIL);
@@ -99,9 +95,6 @@ public final class Analyzer implements Ast.Visitor<Void> {
             for (Ast.Stmt statement : ast.getStatements()) {
                 scope = new Scope(scope);
                 visit(statement);
-                if (statement instanceof Ast.Stmt.Return) {
-                    ((Ast.Stmt.Return) statement).getValue().getType().getScope().defineVariable("!ret", "!ret", ast.getFunction().getReturnType(), Environment.NIL);
-                }
             }
         } finally {
             if (!ast.getStatements().isEmpty()) {
@@ -195,7 +188,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        Environment.Type providedType = ast.getValue().getType().getScope().lookupVariable("!ret").getType();
+        Environment.Type providedType = ast.getValue().getType();
         visit(ast.getValue());
         requireType(ast.getValue().getType(), providedType);
         return null;

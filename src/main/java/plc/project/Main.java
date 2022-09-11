@@ -20,7 +20,7 @@ public class Main {
             var ast = parser.parseSource();
             var analyzer = new Analyzer(null);
             analyzer.visit(ast);
-            writer = new PrintWriter("a.java");
+            writer = new PrintWriter("Main.java");
             var generator = new Generator(writer);
             generator.visit(ast);
         } catch (IOException e) {
