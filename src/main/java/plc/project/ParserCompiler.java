@@ -12,11 +12,10 @@ import java.util.Optional;
  * Tree (AST).
  * <p>
  * The parser has a similar architecture to the lexer, just with {@link Token}s
- * instead of characters. As before, {@link #peek(Object...)} and {@link
- * #match(Object...)} are helpers to make the implementation easier.
+ * instead of characters.
  * <p>
  * This type of parser is called <em>recursive descent</em>. Each rule in our
- * grammar will have it's own function, and reference to other rules correspond
+ * grammar will have its own function, and reference to other rules correspond
  * to calling that functions.
  */
 public final class ParserCompiler {
@@ -141,19 +140,14 @@ public final class ParserCompiler {
     public Ast.Stmt parseStatement() throws ParseException {
         if (peek("LET")) {
             return parseDeclarationStatement();
-
         } else if (peek("IF")) {
             return parseIfStatement();
-
         } else if (peek("FOR")) {
             return parseForStatement();
-
         } else if (peek("WHILE")) {
             return parseWhileStatement();
-
         } else if (peek("RETURN")) {
             return parseReturnStatement();
-
         } else {
             return parseAssignment();
         }
@@ -387,34 +381,25 @@ public final class ParserCompiler {
     /**
      * Parses the {@code primary-expression} rule. This is the top-level rule
      * for expressions and includes literal values, grouping, variables, and
-     * functions. It may be helpful to break these up into other methods but is
-     * not strictly necessary.
+     * functions.
      */
     public Ast.Expr parsePrimaryExpression() throws ParseException {
         if (match("NIL")) {
             return new Ast.Expr.Literal(null);
-
         } else if (match("TRUE")) {
             return new Ast.Expr.Literal(Boolean.TRUE);
-
         } else if (match("FALSE")) {
             return new Ast.Expr.Literal(Boolean.FALSE);
-
         } else if (match(Token.Type.INTEGER)) {
-            return new Ast.Expr.Literal(new BigInteger(getMatchedLiteral()));
-
+            return new Ast.Expr.Literal(new BigInteger(getMatchedLiteral()), Environment.Type.INTEGER);
         } else if (match(Token.Type.DECIMAL)) {
-            return new Ast.Expr.Literal(new BigDecimal(getMatchedLiteral()));
-
+            return new Ast.Expr.Literal(new BigDecimal(getMatchedLiteral()), Environment.Type.DECIMAL);
         } else if (match(Token.Type.CHARACTER)) {
-            return new Ast.Expr.Literal(getCleanedCharValue(getMatchedLiteral()));
-
+            return new Ast.Expr.Literal(getCleanedCharValue(getMatchedLiteral()), Environment.Type.CHARACTER);
         } else if (match(Token.Type.STRING)) {
-            return new Ast.Expr.Literal(getCleanedStringValue(getMatchedLiteral()));
-
+            return new Ast.Expr.Literal(getCleanedStringValue(getMatchedLiteral()), Environment.Type.STRING);
         } else if (peek("(")) {
             return parseGroup();
-
         } else if (peek(Token.Type.IDENTIFIER, "(")) {
             match(Token.Type.IDENTIFIER);
             String name = getMatchedLiteral();
@@ -426,10 +411,8 @@ public final class ParserCompiler {
             }
 
             return expression;
-
         } else if (match(Token.Type.IDENTIFIER)) {
             return new Ast.Expr.Access(Optional.empty(), getMatchedLiteral());
-
         } else {
             throw new ParseException("Unexpected token: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
@@ -462,9 +445,8 @@ public final class ParserCompiler {
             }
             parametersTypes.add(getMatchedLiteral());
 
-            if (!match(",")) {
+            if (!match(","))
                 break;
-            }
         }
     }
 
@@ -487,7 +469,7 @@ public final class ParserCompiler {
             // Ast.Expr.Access
             currentExpression = new Ast.Expr.Access(Optional.of(receiver), getMatchedLiteral());
         } else {
-            // not a Ast.Expr.Function or Ast.Expr.Access
+            // not an Ast.Expr.Function or Ast.Expr.Access
             throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 

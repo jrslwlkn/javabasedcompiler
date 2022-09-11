@@ -5,10 +5,6 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * See the specification for information about what the different visit
- * methods should do.
- */
 public final class Analyzer implements Ast.Visitor<Void> {
 
     public Scope scope;

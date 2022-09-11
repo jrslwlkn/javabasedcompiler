@@ -10,12 +10,9 @@ import java.util.List;
  * - {@link #lexToken()}, which lexes the next token
  * - {@link CharStream}, which manages the state of the lexer and literals
  * <p>
- * If the lexer fails to parse something (such as an unterminated string) you
- * should throw a {@link ParseException} with an index at the character which is
+ * If the lexer fails to parse something (such as an unterminated string) it
+ * throws a {@link ParseException} with an index at the character which is
  * invalid or missing.
- * <p>
- * The {@link #peek(String...)} and {@link #match(String...)} functions are
- * helpers you need to use, they will make the implementation a lot easier.
  */
 public final class Lexer {
 
@@ -65,11 +62,7 @@ public final class Lexer {
 
     /**
      * This method determines the type of the next token, delegating to the
-     * appropriate lex method. As such, it is best for this method to not change
-     * the state of the char stream (thus, use peek not match).
-     * <p>
-     * The next character should start a valid token since whitespace is handled
-     * by {@link #lex()}
+     * appropriate lex method.
      */
     public Token lexToken() {
         if (peek(IDENTIFIER_START)) {
@@ -200,7 +193,7 @@ public final class Lexer {
     /**
      * Returns true in the same way as {@link #peek(String...)}, but also
      * advances the character stream past all matched characters if peek returns
-     * true. Hint - it's easiest to have this method simply call peek.
+     * true.
      */
     public boolean match(String... patterns) {
         if (!peek(patterns)) {
@@ -217,10 +210,6 @@ public final class Lexer {
     /**
      * A helper class maintaining the input string, current index of the char
      * stream, and the current length of the token being matched.
-     * <p>
-     * You should rely on peek/match for state management in nearly all cases.
-     * The only field you need to access is {@link #_index} for any {@link
-     * ParseException} which is thrown.
      */
     public static final class CharStream {
 

@@ -5,10 +5,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-/**
- * See the Parser assignment specification for specific notes on each AST class
- * and how to use it.
- */
 public abstract class Ast {
 
     public static final class Source extends Ast {
@@ -473,7 +469,12 @@ public abstract class Ast {
             private Environment.Type _type = null;
 
             public Literal(Object literal) {
-                this._literal = literal;
+                _literal = literal;
+            }
+
+            public Literal(Object literal, Environment.Type type) {
+                this(literal);
+                setType(type);
             }
 
             public Object getLiteral() {
@@ -489,7 +490,7 @@ public abstract class Ast {
             }
 
             public void setType(Environment.Type type) {
-                this._type = type;
+                _type = type;
             }
 
             @Override

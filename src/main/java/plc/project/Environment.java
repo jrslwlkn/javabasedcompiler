@@ -55,49 +55,49 @@ public final class Environment {
 
     public static final class PlcObject {
 
-        private final Type type;
-        private final Scope scope;
-        private final Object value;
+        private final Type _type;
+        private final Scope _scope;
+        private final Object _value;
 
         public PlcObject(Scope scope, Object value) {
             this(new Type("Unknown", "Unknown", scope), scope, value);
         }
 
         public PlcObject(Type type, Scope scope, Object value) {
-            this.type = type;
-            this.scope = scope;
-            this.value = value;
+            _type = type;
+            _scope = scope;
+            _value = value;
         }
 
         public Type getType() {
-            return type;
+            return _type;
         }
 
         public Variable getField(String name) {
-            return scope.lookupVariable(name);
+            return _scope.lookupVariable(name);
         }
 
         public void setField(String name, PlcObject value) {
-            scope.lookupVariable(name).setValue(value);
+            _scope.lookupVariable(name).setValue(value);
         }
 
         public PlcObject callMethod(String name, List<PlcObject> arguments) {
-            Function function = type.getMethod(name, arguments.size());
+            Function function = _type.getMethod(name, arguments.size());
             arguments = new ArrayList<>(arguments);
             arguments.add(0, this);
             return function.invoke(arguments);
         }
 
         public Object getValue() {
-            return value;
+            return _value;
         }
 
         @Override
         public String toString() {
             return "Object{" +
-                    "type=" + type +
-                    ", value=" + value +
-                    ", scope=" + scope +
+                    "type=" + _type +
+                    ", value=" + _value +
+                    ", scope=" + _scope +
                     '}';
         }
 
@@ -105,57 +105,57 @@ public final class Environment {
 
     public static final class Variable {
 
-        private final String name;
-        private final String jvmName;
-        private final Type type;
-        private PlcObject value;
+        private final String _name;
+        private final String _jvmName;
+        private final Type _type;
+        private PlcObject _value;
 
         public Variable(String name, PlcObject value) {
             this(name, name, Type.ANY, value);
         }
 
         public Variable(String name, String jvmName, Type type, PlcObject value) {
-            this.name = name;
-            this.jvmName = jvmName;
-            this.type = type;
-            this.value = value;
+            _name = name;
+            _jvmName = jvmName;
+            _type = type;
+            _value = value;
         }
 
         public Type getType() {
-            return type;
+            return _type;
         }
 
         public String getName() {
-            return name;
+            return _name;
         }
 
         public String getJvmName() {
-            return jvmName;
+            return _jvmName;
         }
 
         public PlcObject getValue() {
-            return value;
+            return _value;
         }
 
         public void setValue(PlcObject value) {
-            this.value = value;
+            _value = value;
         }
 
         @Override
         public boolean equals(Object obj) {
             return obj instanceof Variable &&
-                    name.equals(((Variable) obj).name) &&
-                    jvmName.equals(((Variable) obj).jvmName) &&
-                    type.equals(((Variable) obj).type);
+                    _name.equals(((Variable) obj)._name) &&
+                    _jvmName.equals(((Variable) obj)._jvmName) &&
+                    _type.equals(((Variable) obj)._type);
         }
 
         @Override
         public String toString() {
             return "Variable{" +
-                    "name='" + name + '\'' +
-                    ", jvmName'" + jvmName + '\'' +
-                    ", type=" + type +
-                    ", value=" + value +
+                    "name='" + _name + '\'' +
+                    ", jvmName'" + _jvmName + '\'' +
+                    ", type=" + _type +
+                    ", value=" + _value +
                     '}';
         }
 
@@ -163,65 +163,65 @@ public final class Environment {
 
     public static final class Function {
 
-        private final String name;
-        private final String jvmName;
-        private final List<Type> parameterTypes;
-        private final Type returnType;
-        private final java.util.function.Function<List<PlcObject>, PlcObject> function;
+        private final String _name;
+        private final String _jvmName;
+        private final List<Type> _parameterTypes;
+        private final Type _returnType;
+        private final java.util.function.Function<List<PlcObject>, PlcObject> _function;
 
         public Function(String name, int arity, java.util.function.Function<List<PlcObject>, PlcObject> function) {
             this(name, name, new ArrayList<>(), Type.ANY, function);
             for (int i = 0; i < arity; i++) {
-                this.parameterTypes.add(Type.ANY);
+                _parameterTypes.add(Type.ANY);
             }
         }
 
         public Function(String name, String jvmName, List<Type> parameterTypes, Type returnType, java.util.function.Function<List<PlcObject>, PlcObject> function) {
-            this.name = name;
-            this.jvmName = jvmName;
-            this.parameterTypes = parameterTypes;
-            this.returnType = returnType;
-            this.function = function;
+            _name = name;
+            _jvmName = jvmName;
+            _parameterTypes = parameterTypes;
+            _returnType = returnType;
+            _function = function;
         }
 
         public String getName() {
-            return name;
+            return _name;
         }
 
         public String getJvmName() {
-            return jvmName;
+            return _jvmName;
         }
 
         public List<Type> getParameterTypes() {
-            return parameterTypes;
+            return _parameterTypes;
         }
 
         public Type getReturnType() {
-            return returnType;
+            return _returnType;
         }
 
         public PlcObject invoke(List<PlcObject> arguments) {
-            return function.apply(arguments);
+            return _function.apply(arguments);
         }
 
         @Override
         public boolean equals(Object obj) {
             return obj instanceof Function &&
-                    name.equals(((Function) obj).name) &&
-                    jvmName.equals(((Function) obj).jvmName) &&
-                    parameterTypes.equals(((Function) obj).parameterTypes) &&
-                    returnType.equals(((Function) obj).returnType);
+                    _name.equals(((Function) obj)._name) &&
+                    _jvmName.equals(((Function) obj)._jvmName) &&
+                    _parameterTypes.equals(((Function) obj)._parameterTypes) &&
+                    _returnType.equals(((Function) obj)._returnType);
         }
 
         @Override
         public String toString() {
             return "Function{" +
-                    "name='" + name + '\'' +
-                    ", jvmName='" + jvmName + '\'' +
-                    ", arity=" + parameterTypes.size() +
-                    ", parameterTypes=" + parameterTypes +
-                    ", returnType=" + returnType +
-                    ", function=" + function +
+                    "name='" + _name + '\'' +
+                    ", jvmName='" + _jvmName + '\'' +
+                    ", arity=" + _parameterTypes.size() +
+                    ", parameterTypes=" + _parameterTypes +
+                    ", returnType=" + _returnType +
+                    ", function=" + _function +
                     '}';
         }
 
@@ -230,13 +230,13 @@ public final class Environment {
     public static final class Type {
 
         public static final Type ANY = new Type("Any", "Object", new Scope(null));
-        public static final Type NIL = new Type("Nil", "Void", new Scope(ANY._scope));
+        public static final Type NIL = new Type("Nil", "void", new Scope(ANY._scope));
         public static final Type INTEGER_ITERABLE = new Type("IntegerIterable", "Iterable<Integer>", new Scope(ANY._scope));
         public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY._scope));
-        public static final Type BOOLEAN = new Type("Boolean", "boolean", new Scope(ANY._scope));
-        public static final Type INTEGER = new Type("Integer", "int", new Scope(COMPARABLE._scope));
-        public static final Type DECIMAL = new Type("Decimal", "double", new Scope(COMPARABLE._scope));
-        public static final Type CHARACTER = new Type("Character", "char", new Scope(COMPARABLE._scope));
+        public static final Type BOOLEAN = new Type("Boolean", "Boolean", new Scope(ANY._scope));
+        public static final Type INTEGER = new Type("Integer", "Integer", new Scope(COMPARABLE._scope));
+        public static final Type DECIMAL = new Type("Decimal", "Double", new Scope(COMPARABLE._scope));
+        public static final Type CHARACTER = new Type("Character", "Character", new Scope(COMPARABLE._scope));
         public static final Type STRING = new Type("String", "String", new Scope(COMPARABLE._scope));
 
         private final String _name;
@@ -258,7 +258,7 @@ public final class Environment {
         }
 
         public Scope getScope() {
-            return this._scope;
+            return _scope;
         }
 
         public Variable getField(String name) {

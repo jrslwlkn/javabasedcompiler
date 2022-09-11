@@ -16,7 +16,7 @@ import java.util.Optional;
  * #match(Object...)} are helpers to make the implementation easier.
  * <p>
  * This type of parser is called <em>recursive descent</em>. Each rule in our
- * grammar will have it's own function, and reference to other rules correspond
+ * grammar will have its own function, and reference to other rules correspond
  * to calling that functions.
  */
 public final class ParserInterpreter {
