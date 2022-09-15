@@ -16,6 +16,10 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Source ast) {
+        for (Ast.Struct struct : ast.getStructs()) {
+            visit(struct);
+        }
+
         for (Ast.Field field : ast.getFields()) {
             visit(field);
         }
@@ -34,13 +38,22 @@ public final class Analyzer implements Ast.Visitor<Void> {
     }
 
     @Override
+    public Void visit(Ast.Struct ast) {
+        for (Ast.Field field : ast.getFields())
+            visit(field);
+        for (Ast.Method method : ast.getMethods())
+            visit(method);
+        return null;
+    }
+
+    @Override
     public Void visit(Ast.Field ast) {
         if (ast.getValue().isPresent()) {
             visit(ast.getValue().get());
-            requireAssignable(Environment.getType(ast.getTypeName()), ast.getValue().get().getType());
+            requireAssignable(Environment.getType(ast.getTypeName(), scope), ast.getValue().get().getType());
         }
 
-        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName()), Environment.NIL));
+        ast.setVariable(scope.defineVariable(ast.getName(), ast.getName(), Environment.getType(ast.getTypeName(), scope), Environment.NIL));
         return null;
     }
 
@@ -77,7 +90,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
         List<Environment.Type> paramTypes = new ArrayList<>();
         for (int i = 0; i < ast.getParameters().size(); ++i) {
             var param = ast.getParameters().get(i);
-            var type = Environment.getType(ast.getParameterTypeNames().get(i));
+            var type = Environment.getType(ast.getParameterTypeNames().get(i), scope);
             scope.defineVariable(param, param, type, Environment.NIL);
             paramTypes.add(type);
         }
@@ -86,22 +99,35 @@ public final class Analyzer implements Ast.Visitor<Void> {
         if (ast.getReturnTypeName().isEmpty()) {
             retType = Environment.Type.NIL;
         } else {
-            retType = Environment.getType(ast.getReturnTypeName().get());
+            retType = Environment.getType(ast.getReturnTypeName().get(), scope);
         }
+        boolean retVerified = false;
 
         scope.defineFunction(ast.getName(), ast.getName(), paramTypes, retType, plcObjects -> Environment.NIL);
 
+        for (Ast.Struct struct : ast.getStructs()) {
+            visit(struct);
+        }
         try {
             for (Ast.Stmt statement : ast.getStatements()) {
                 scope = new Scope(scope);
                 visit(statement);
+                if (statement instanceof Ast.Stmt.Return) {
+                    requireType(((Ast.Stmt.Return) statement).getValue().getType(), retType);
+                    retVerified = true;
+                }
             }
+        } catch (RuntimeException e) {
+            throw e;
         } finally {
             if (!ast.getStatements().isEmpty()) {
                 scope = scope.getParent();
             }
         }
 
+        if (!retVerified) {
+            requireType(retType, Environment.Type.NIL);
+        }
         ast.setFunction(scope.lookupFunction(ast.getName(), ast.getParameters().size()));
         return null;
     }
@@ -188,9 +214,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
     @Override
     public Void visit(Ast.Stmt.Return ast) {
-        Environment.Type providedType = ast.getValue().getType();
         visit(ast.getValue());
-        requireType(ast.getValue().getType(), providedType);
         return null;
     }
 
@@ -243,7 +267,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
 
         Environment.Type type = null;
         if (ast.getTypeName().isPresent()) {
-            type = Environment.getType(ast.getTypeName().get());
+            type = Environment.getType(ast.getTypeName().get(), scope);
         }
         if (ast.getValue().isPresent()) {
             visit(ast.getValue().get());
@@ -284,7 +308,7 @@ public final class Analyzer implements Ast.Visitor<Void> {
                 requireType(func.getParameterTypes().get(i), ast.getArguments().get(i - 1).getType());
             }
 
-            ast.setFunction(receiver.getType().getScope().lookupFunction(ast.getName(), ast.getArguments().size() + 1));
+            ast.setFunction(receiver.getType().getScope().lookupFunction(ast.getName(), ast.getArguments().size()));
         } else {
             Environment.Function func = scope.lookupFunction(ast.getName(), ast.getArguments().size());
 

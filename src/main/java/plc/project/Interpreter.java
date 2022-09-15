@@ -25,6 +25,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
     }
 
     @Override
+    public Environment.PlcObject visit(Ast ast) {
+        return Ast.Visitor.super.visit(ast);
+    }
+
+    @Override
     public Environment.PlcObject visit(Ast.Source ast) {
 
         for (Ast.Field field : ast.getFields()) {
@@ -40,6 +45,11 @@ public class Interpreter implements Ast.Visitor<Environment.PlcObject> {
         }
 
         return _scope.lookupFunction("main", 0).invoke(new ArrayList<>());
+    }
+
+    @Override
+    public Environment.PlcObject visit(Ast.Struct ast) {
+        return null;
     }
 
     @Override

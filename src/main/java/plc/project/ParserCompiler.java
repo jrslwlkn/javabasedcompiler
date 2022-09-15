@@ -32,21 +32,25 @@ public final class ParserCompiler {
     public Ast.Source parseSource() throws ParseException {
         List<Ast.Field> fields = new ArrayList<>();
         List<Ast.Method> methods = new ArrayList<>();
+        List<Ast.Struct> structs = new ArrayList<>();
 
-        boolean methodsStarted = false;
+        boolean defStarted = false;
         while (_tokens.has(0)) {
             if (peek("LET")) {
-                if (methodsStarted) {
+                if (defStarted) {
                     throw new ParseException("Expected: `DEF`, received: `" + getMatchedLiteral() + "`.", getMatchedIndex());
                 }
 
                 fields.add(parseField());
+            } else if (peek("DEF", "TYPE")) { // DEF TYPE Set(t: String) DO ...
+                defStarted = true;
+                structs.add(parseStruct());
             } else if (peek("DEF")) { // DEF name() ...
-                methodsStarted = true;
+                defStarted = true;
                 methods.add(parseMethod());
             } else {
                 throw new ParseException("Expected: "
-                        + (methodsStarted ? "" : "`LET` or ")
+                        + (defStarted ? "" : "`LET` or ")
                         + "`DEF`, received: `"
                         + getPeekedLiteral()
                         + "`.",
@@ -54,7 +58,7 @@ public final class ParserCompiler {
             }
         }
 
-        return new Ast.Source(fields, methods);
+        return new Ast.Source(fields, methods, structs);
     }
 
     /**
@@ -121,15 +125,60 @@ public final class ParserCompiler {
         }
 
         List<Ast.Stmt> statements = new ArrayList<>();
+        List<Ast.Struct> structs = new ArrayList<>();
         while (!peek("END")) {
-            statements.add(parseStatement());
+            if (peek("DEF", "TYPE"))
+                structs.add(parseStruct());
+            else
+                statements.add(parseStatement());
         }
 
         if (!match("END")) {
             throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        return new Ast.Method(name, parameters, parametersTypes, returnType, statements);
+        return new Ast.Method(name, parameters, parametersTypes, returnType, statements, structs);
+    }
+
+    /**
+     * Parses the {@code struct} rule. This method should only be called if the
+     * next tokens start a struct/type, aka {@code DEF TYPE}.
+     */
+    public Ast.Struct parseStruct() throws ParseException {
+        match("DEF", "TYPE");
+
+        if (!match(Token.Type.IDENTIFIER)) {
+            throw new ParseException("Expected: Identifier, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        String name = getMatchedLiteral();
+
+        if (!match(":")) {
+            throw new ParseException("Expected: `:`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        List<Ast.Field> fields = new ArrayList<>();
+        List<Ast.Method> methods = new ArrayList<>();
+        while (!peek("END")) {
+            if (peek("LET")) {
+                fields.add(parseField());
+            } else if (peek("DEF")) { // DEF name() ...
+                methods.add(parseMethod());
+            } else {
+                throw new ParseException("Expected: "
+                        + "`LET` or "
+                        + "`DEF`, received: `"
+                        + getPeekedLiteral()
+                        + "`.",
+                        getPeekedIndex());
+            }
+        }
+
+        if (!match("END")) {
+            throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
+        }
+
+        return new Ast.Struct(name, fields, methods);
     }
 
     /**

@@ -7,14 +7,90 @@ import java.util.Optional;
 
 public abstract class Ast {
 
-    public static final class Source extends Ast {
+    public interface Visitor<T> {
+
+        default T visit(Ast ast) {
+            if (ast instanceof Struct) {
+                return visit((Struct) ast);
+            } else if (ast instanceof Source) {
+                return visit((Source) ast);
+            } else if (ast instanceof Field) {
+                return visit((Field) ast);
+            } else if (ast instanceof Method) {
+                return visit((Method) ast);
+            } else if (ast instanceof Stmt.Expression) {
+                return visit((Stmt.Expression) ast);
+            } else if (ast instanceof Stmt.Declaration) {
+                return visit((Stmt.Declaration) ast);
+            } else if (ast instanceof Stmt.Assignment) {
+                return visit((Stmt.Assignment) ast);
+            } else if (ast instanceof Stmt.If) {
+                return visit((Stmt.If) ast);
+            } else if (ast instanceof Stmt.For) {
+                return visit((Stmt.For) ast);
+            } else if (ast instanceof Stmt.While) {
+                return visit((Stmt.While) ast);
+            } else if (ast instanceof Stmt.Return) {
+                return visit((Stmt.Return) ast);
+            } else if (ast instanceof Expr.Literal) {
+                return visit((Expr.Literal) ast);
+            } else if (ast instanceof Expr.Group) {
+                return visit((Expr.Group) ast);
+            } else if (ast instanceof Expr.Binary) {
+                return visit((Expr.Binary) ast);
+            } else if (ast instanceof Expr.Access) {
+                return visit((Expr.Access) ast);
+            } else if (ast instanceof Expr.Function) {
+                return visit((Expr.Function) ast);
+            } else {
+                throw new AssertionError("Unimplemented AST type: " + ast.getClass().getName() + ".");
+            }
+        }
+
+        T visit(Source ast);
+
+        T visit(Struct ast);
+
+        T visit(Field ast);
+
+        T visit(Method ast);
+
+        T visit(Stmt.Expression ast);
+
+        T visit(Stmt.Declaration ast);
+
+        T visit(Stmt.Assignment ast);
+
+        T visit(Stmt.If ast);
+
+        T visit(Stmt.For ast);
+
+        T visit(Stmt.While ast);
+
+        T visit(Stmt.Return ast);
+
+        T visit(Expr.Literal ast);
+
+        T visit(Expr.Group ast);
+
+        T visit(Expr.Binary ast);
+
+        T visit(Expr.Access ast);
+
+        T visit(Expr.Function ast);
+
+    }
+
+    public static class Source extends Ast {
 
         private final List<Field> _fields;
         private final List<Method> _methods;
+        private final List<Struct> _structs;
 
-        public Source(List<Field> fields, List<Method> methods) {
+        public Source(List<Field> fields, List<Method> methods, List<Struct> structs) {
             _fields = fields;
             _methods = methods;
+            _structs = structs;
         }
 
         public List<Field> getFields() {
@@ -23,6 +99,10 @@ public abstract class Ast {
 
         public List<Method> getMethods() {
             return _methods;
+        }
+
+        public List<Struct> getStructs() {
+            return _structs;
         }
 
         @Override
@@ -103,6 +183,33 @@ public abstract class Ast {
 
     }
 
+    public static class Struct extends Source {
+
+        private final String _name;
+
+        public Struct(String name, List<Field> fields, List<Method> methods) {
+            super(fields, methods, null);
+            _name = name;
+        }
+
+        public String getName() {
+            return _name;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            return obj instanceof Struct && equals(obj);
+        }
+
+        @Override
+        public String toString() {
+            return "Ast.Struct{" +
+                    "fields=" + getFields() +
+                    "functions=" + getMethods() +
+                    '}';
+        }
+    }
+
     public static final class Method extends Ast {
 
         private final String _name;
@@ -111,20 +218,22 @@ public abstract class Ast {
         private final Optional<String> _returnTypeName;
         private final List<Stmt> _statements;
         private Environment.Function _function = null;
+        private final List<Ast.Struct> _structs;
 
-        public Method(String name, List<String> parameters, List<Stmt> statements) {
-            this(name, parameters, new ArrayList<>(), Optional.of("Any"), statements);
+        public Method(String name, List<String> parameters, List<Stmt> statements, List<Ast.Struct> structs) {
+            this(name, parameters, new ArrayList<>(), Optional.of("Any"), statements, structs);
             for (int i = 0; i < parameters.size(); i++) {
                 _parameterTypeNames.add("Any");
             }
         }
 
-        public Method(String name, List<String> parameters, List<String> parameterTypeNames, Optional<String> returnTypeName, List<Stmt> statements) {
+        public Method(String name, List<String> parameters, List<String> parameterTypeNames, Optional<String> returnTypeName, List<Stmt> statements, List<Ast.Struct> structs) {
             _name = name;
             _parameters = parameters;
             _parameterTypeNames = parameterTypeNames;
             _returnTypeName = returnTypeName;
             _statements = statements;
+            _structs = structs;
         }
 
         public String getName() {
@@ -147,6 +256,10 @@ public abstract class Ast {
             return _statements;
         }
 
+        public List<Ast.Struct> getStructs() {
+            return _structs;
+        }
+
         public Environment.Function getFunction() {
             if (_function == null) {
                 throw new IllegalStateException("function is uninitialized");
@@ -155,7 +268,7 @@ public abstract class Ast {
         }
 
         public void setFunction(Environment.Function function) {
-            this._function = function;
+            _function = function;
         }
 
         @Override
@@ -178,6 +291,7 @@ public abstract class Ast {
                     ", returnTypeName='" + _returnTypeName + '\'' +
                     ", statements=" + _statements +
                     ", function=" + _function +
+                    ", structs=" + _structs +
                     '}';
         }
 
@@ -190,7 +304,7 @@ public abstract class Ast {
             private final Expr _expression;
 
             public Expression(Expr expression) {
-                this._expression = expression;
+                _expression = expression;
             }
 
             public Expr getExpression() {
@@ -474,7 +588,7 @@ public abstract class Ast {
 
             public Literal(Object literal, Environment.Type type) {
                 this(literal);
-                setType(type);
+//                _type = type; // FIXME: why some tests fail otherwise?
             }
 
             public Object getLiteral() {
@@ -725,76 +839,6 @@ public abstract class Ast {
             }
 
         }
-
-    }
-
-    public interface Visitor<T> {
-
-        default T visit(Ast ast) {
-            if (ast instanceof Source) {
-                return visit((Source) ast);
-            } else if (ast instanceof Field) {
-                return visit((Field) ast);
-            } else if (ast instanceof Method) {
-                return visit((Method) ast);
-            } else if (ast instanceof Stmt.Expression) {
-                return visit((Stmt.Expression) ast);
-            } else if (ast instanceof Stmt.Declaration) {
-                return visit((Stmt.Declaration) ast);
-            } else if (ast instanceof Stmt.Assignment) {
-                return visit((Stmt.Assignment) ast);
-            } else if (ast instanceof Stmt.If) {
-                return visit((Stmt.If) ast);
-            } else if (ast instanceof Stmt.For) {
-                return visit((Stmt.For) ast);
-            } else if (ast instanceof Stmt.While) {
-                return visit((Stmt.While) ast);
-            } else if (ast instanceof Stmt.Return) {
-                return visit((Stmt.Return) ast);
-            } else if (ast instanceof Expr.Literal) {
-                return visit((Expr.Literal) ast);
-            } else if (ast instanceof Expr.Group) {
-                return visit((Expr.Group) ast);
-            } else if (ast instanceof Expr.Binary) {
-                return visit((Expr.Binary) ast);
-            } else if (ast instanceof Expr.Access) {
-                return visit((Expr.Access) ast);
-            } else if (ast instanceof Expr.Function) {
-                return visit((Expr.Function) ast);
-            } else {
-                throw new AssertionError("Unimplemented AST type: " + ast.getClass().getName() + ".");
-            }
-        }
-
-        T visit(Source ast);
-
-        T visit(Field ast);
-
-        T visit(Method ast);
-
-        T visit(Stmt.Expression ast);
-
-        T visit(Stmt.Declaration ast);
-
-        T visit(Stmt.Assignment ast);
-
-        T visit(Stmt.If ast);
-
-        T visit(Stmt.For ast);
-
-        T visit(Stmt.While ast);
-
-        T visit(Stmt.Return ast);
-
-        T visit(Expr.Literal ast);
-
-        T visit(Expr.Group ast);
-
-        T visit(Expr.Binary ast);
-
-        T visit(Expr.Access ast);
-
-        T visit(Expr.Function ast);
 
     }
 

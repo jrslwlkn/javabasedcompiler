@@ -55,7 +55,7 @@ public final class ParserInterpreter {
             }
         }
 
-        return new Ast.Source(fields, methods);
+        return new Ast.Source(fields, methods, null);
     }
 
     /**
@@ -116,7 +116,7 @@ public final class ParserInterpreter {
             throw new ParseException("Expected: `END`, received: `" + getPeekedLiteral() + "`.", getPeekedIndex());
         }
 
-        return new Ast.Method(name, parameters, statements);
+        return new Ast.Method(name, parameters, statements, null);
     }
 
     /**

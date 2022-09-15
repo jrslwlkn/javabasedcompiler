@@ -87,10 +87,10 @@ final class ParserInterpreterTests {
                                 new Token(Token.Type.IDENTIFIER, "END", 20)
                         ),
                         new Ast.Source(new ArrayList<>(),
-                                Arrays.asList(new Ast.Method("name", Arrays.asList("x", "y", "z"), Arrays.asList(
-                                        new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt"))
-                                        ))
-                                )
+                                List.of(new Ast.Method("name", Arrays.asList("x", "y", "z"), List.of(
+                                                new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt"))
+                                        ), null)
+                                ), null
                         )),
                 Arguments.of("Missing END in method",
                         Arrays.asList(
@@ -150,15 +150,16 @@ final class ParserInterpreterTests {
                                 new Token(Token.Type.IDENTIFIER, "END", 20)
                         ),
                         new Ast.Source(
-                                Arrays.asList(),
-                                Arrays.asList(new Ast.Method("name", Arrays.asList(), Arrays.asList(
+                                List.of(),
+                                List.of(new Ast.Method("name", List.of(), List.of(
                                         new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt"))
-                                )))
+                                ), null)),
+                                List.of()
                         )
                 ),
                 Arguments.of("Zero Statements",
-                        Arrays.asList(),
-                        new Ast.Source(Arrays.asList(), Arrays.asList())
+                        List.of(),
+                        new Ast.Source(List.of(), List.of(), List.of())
                 ),
                 Arguments.of("Field",
                         Arrays.asList(
@@ -170,8 +171,9 @@ final class ParserInterpreterTests {
                                 new Token(Token.Type.OPERATOR, ";", 15)
                         ),
                         new Ast.Source(
-                                Arrays.asList(new Ast.Field("name", Optional.of(new Ast.Expr.Access(Optional.empty(), "expr")))),
-                                Arrays.asList()
+                                List.of(new Ast.Field("name", Optional.of(new Ast.Expr.Access(Optional.empty(), "expr")))),
+                                List.of(),
+                                List.of()
                         )
                 )
         );
@@ -186,14 +188,14 @@ final class ParserInterpreterTests {
     private static Stream<Arguments> testExpressionStatement() {
         return Stream.of(
                 Arguments.of("Invalid Expression",
-                        Arrays.asList(
+                        List.of(
                                 //name
                                 new Token(Token.Type.OPERATOR, "?", 0)
                         ),
                         null
                 ),
                 Arguments.of("Variable Expression Missing Semicolon",
-                        Arrays.asList(
+                        List.of(
                                 //name
                                 new Token(Token.Type.IDENTIFIER, "name", 0)
                         ),
@@ -215,7 +217,7 @@ final class ParserInterpreterTests {
                                 new Token(Token.Type.OPERATOR, ")", 5),
                                 new Token(Token.Type.OPERATOR, ";", 6)
                         ),
-                        new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList()))
+                        new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "name", List.of()))
                 ),
                 Arguments.of("Function Expression Missing Semicolon",
                         Arrays.asList(
@@ -419,8 +421,8 @@ final class ParserInterpreterTests {
                         ),
                         new Ast.Stmt.If(
                                 new Ast.Expr.Access(Optional.empty(), "expr"),
-                                Arrays.asList(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt1"))),
-                                Arrays.asList(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt2")))
+                                List.of(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt1"))),
+                                List.of(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt2")))
                         )
                 ),
                 Arguments.of("If",
@@ -435,8 +437,8 @@ final class ParserInterpreterTests {
                         ),
                         new Ast.Stmt.If(
                                 new Ast.Expr.Access(Optional.empty(), "expr"),
-                                Arrays.asList(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt"))),
-                                Arrays.asList()
+                                List.of(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt"))),
+                                List.of()
                         )
                 ),
                 Arguments.of("Missing DO in If",
@@ -476,7 +478,7 @@ final class ParserInterpreterTests {
                         new Ast.Stmt.For(
                                 "elem",
                                 new Ast.Expr.Access(Optional.empty(), "list"),
-                                Arrays.asList(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt")))
+                                List.of(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt")))
                         )
                 ),
                 Arguments.of("Empty Statement in For",
@@ -492,7 +494,7 @@ final class ParserInterpreterTests {
                         new Ast.Stmt.For(
                                 "elem",
                                 new Ast.Expr.Access(Optional.empty(), "list"),
-                                Arrays.asList()
+                                List.of()
                         )
                 ),
                 Arguments.of("Invalid Identifier in For",
@@ -541,7 +543,7 @@ final class ParserInterpreterTests {
                         ),
                         new Ast.Stmt.While(
                                 new Ast.Expr.Access(Optional.empty(), "expr"),
-                                Arrays.asList(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt")))
+                                List.of(new Ast.Stmt.Expression(new Ast.Expr.Access(Optional.empty(), "stmt")))
                         )
                 ),
                 Arguments.of("Multiple Statements in While",
@@ -602,27 +604,27 @@ final class ParserInterpreterTests {
     private static Stream<Arguments> testLiteralExpression() {
         return Stream.of(
                 Arguments.of("Boolean Literal",
-                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "TRUE", 0)),
+                        List.of(new Token(Token.Type.IDENTIFIER, "TRUE", 0)),
                         new Ast.Expr.Literal(Boolean.TRUE)
                 ),
                 Arguments.of("Integer Literal",
-                        Arrays.asList(new Token(Token.Type.INTEGER, "1", 0)),
+                        List.of(new Token(Token.Type.INTEGER, "1", 0)),
                         new Ast.Expr.Literal(new BigInteger("1"))
                 ),
                 Arguments.of("Decimal Literal",
-                        Arrays.asList(new Token(Token.Type.DECIMAL, "2.0", 0)),
+                        List.of(new Token(Token.Type.DECIMAL, "2.0", 0)),
                         new Ast.Expr.Literal(new BigDecimal("2.0"))
                 ),
                 Arguments.of("Character Literal",
-                        Arrays.asList(new Token(Token.Type.CHARACTER, "'c'", 0)),
+                        List.of(new Token(Token.Type.CHARACTER, "'c'", 0)),
                         new Ast.Expr.Literal('c')
                 ),
                 Arguments.of("String Literal",
-                        Arrays.asList(new Token(Token.Type.STRING, "\"string\"", 0)),
+                        List.of(new Token(Token.Type.STRING, "\"string\"", 0)),
                         new Ast.Expr.Literal("string")
                 ),
                 Arguments.of("Escape Character",
-                        Arrays.asList(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
+                        List.of(new Token(Token.Type.STRING, "\"Hello,\\nWorld!\"", 0)),
                         new Ast.Expr.Literal("Hello,\nWorld!")
                 )
         );
@@ -791,7 +793,7 @@ final class ParserInterpreterTests {
                         null
                 ),
                 Arguments.of("Variable",
-                        Arrays.asList(new Token(Token.Type.IDENTIFIER, "name", 0)),
+                        List.of(new Token(Token.Type.IDENTIFIER, "name", 0)),
                         new Ast.Expr.Access(Optional.empty(), "name")
                 ),
                 Arguments.of("Field Access",
@@ -821,7 +823,7 @@ final class ParserInterpreterTests {
                                 new Token(Token.Type.OPERATOR, "(", 4),
                                 new Token(Token.Type.OPERATOR, ")", 5)
                         ),
-                        new Ast.Expr.Function(Optional.empty(), "name", Arrays.asList())
+                        new Ast.Expr.Function(Optional.empty(), "name", List.of())
                 ),
                 Arguments.of("Multiple Arguments",
                         Arrays.asList(
@@ -850,7 +852,7 @@ final class ParserInterpreterTests {
                                 new Token(Token.Type.OPERATOR, "(", 10),
                                 new Token(Token.Type.OPERATOR, ")", 11)
                         ),
-                        new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "method", Arrays.asList())
+                        new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.empty(), "obj")), "method", List.of())
                 ),
                 Arguments.of("Trailing Comma in Method Call",
                         Arrays.asList(
@@ -919,30 +921,30 @@ final class ParserInterpreterTests {
                 new Token(Token.Type.IDENTIFIER, "END", 111)
         );
         Ast.Source expected = new Ast.Source(
-                Arrays.asList(new Ast.Field("first", Optional.of(new Ast.Expr.Literal(BigInteger.ONE)))),
-                Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(
-                        new Ast.Stmt.While(
-                                new Ast.Expr.Binary("!=",
-                                        new Ast.Expr.Access(Optional.empty(), "first"),
-                                        new Ast.Expr.Literal(BigInteger.valueOf(16))
-                                ),
-                                Arrays.asList(
-                                        new Ast.Stmt.Expression(
-                                                new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
-                                                        new Ast.Expr.Access(Optional.empty(), "first"))
-                                                )
-                                        ),
-                                        new Ast.Stmt.Assignment(
+                List.of(new Ast.Field("first", Optional.of(new Ast.Expr.Literal(BigInteger.ONE)))),
+                List.of(new Ast.Method("main", List.of(), List.of(
+                                new Ast.Stmt.While(
+                                        new Ast.Expr.Binary("!=",
                                                 new Ast.Expr.Access(Optional.empty(), "first"),
-                                                new Ast.Expr.Binary("*",
+                                                new Ast.Expr.Literal(BigInteger.valueOf(16))
+                                        ),
+                                        Arrays.asList(
+                                                new Ast.Stmt.Expression(
+                                                        new Ast.Expr.Function(Optional.empty(), "print", List.of(
+                                                                new Ast.Expr.Access(Optional.empty(), "first"))
+                                                        )
+                                                ),
+                                                new Ast.Stmt.Assignment(
                                                         new Ast.Expr.Access(Optional.empty(), "first"),
-                                                        new Ast.Expr.Literal(BigInteger.valueOf(2))
+                                                        new Ast.Expr.Binary("*",
+                                                                new Ast.Expr.Access(Optional.empty(), "first"),
+                                                                new Ast.Expr.Literal(BigInteger.valueOf(2))
+                                                        )
                                                 )
                                         )
                                 )
-                        )
-                        ))
-                ));
+                        ), null)
+                ), null);
         test(input, expected, ParserInterpreter::parseSource);
     }
 
@@ -1027,11 +1029,11 @@ final class ParserInterpreterTests {
                         new Ast.Field("i", Optional.of(new Ast.Expr.Literal(BigInteger.valueOf(-1)))),
                         new Ast.Field("inc", Optional.of(new Ast.Expr.Literal(BigInteger.valueOf(2))))
                 ),
-                Arrays.asList(
+                List.of(
                         new Ast.Method(
                                 "foo",
-                                Arrays.asList(),
-                                Arrays.asList(
+                                List.of(),
+                                List.of(
                                         new Ast.Stmt.While(
                                                 new Ast.Expr.Binary(
                                                         "<=",
@@ -1045,18 +1047,18 @@ final class ParserInterpreterTests {
                                                                         new Ast.Expr.Access(Optional.empty(), "i"),
                                                                         new Ast.Expr.Literal(BigInteger.ZERO)
                                                                 ),
-                                                                Arrays.asList(
+                                                                List.of(
                                                                         new Ast.Stmt.Expression(
                                                                                 new Ast.Expr.Function(
                                                                                         Optional.empty(),
                                                                                         "print",
-                                                                                        Arrays.asList(
+                                                                                        List.of(
                                                                                                 new Ast.Expr.Literal("bar")
                                                                                         )
                                                                                 )
                                                                         )
                                                                 ),
-                                                                Arrays.asList()
+                                                                List.of()
                                                         ),
                                                         new Ast.Stmt.Assignment(
                                                                 new Ast.Expr.Access(Optional.empty(), "i"),
@@ -1068,9 +1070,11 @@ final class ParserInterpreterTests {
                                                         )
                                                 )
                                         )
-                                )
+                                ),
+                                null
                         )
-                )
+                ),
+                null
         );
     }
 

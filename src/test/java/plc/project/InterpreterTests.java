@@ -37,26 +37,26 @@ final class InterpreterTests {
                         // methods
                         Arrays.asList(
                                 // f(z)
-                                new Ast.Method("f", Arrays.asList("z"), Arrays.asList(
+                                new Ast.Method("f", List.of("z"), List.of(
                                         new Ast.Stmt.Return(
                                                 new Ast.Expr.Binary("+", new Ast.Expr.Access(Optional.empty(), "x"), new Ast.Expr.Binary("+",
                                                         new Ast.Expr.Access(Optional.empty(), "y"),
                                                         new Ast.Expr.Access(Optional.empty(), "z"))))
-                                )),
+                                ), null),
                                 // main()
-                                new Ast.Method("main", Arrays.asList(), Arrays.asList(
+                                new Ast.Method("main", List.of(), Arrays.asList(
                                         new Ast.Stmt.Declaration("y", Optional.of(new Ast.Expr.Literal(BigInteger.valueOf(4)))),
                                         new Ast.Stmt.Return(new Ast.Expr.Function(Optional.empty(),
                                                 "f",
-                                                Arrays.asList(new Ast.Expr.Literal(BigInteger.valueOf(5))))))
-                                ))
+                                                List.of(new Ast.Expr.Literal(BigInteger.valueOf(5)))))), null
+                                )), null
                 ), BigInteger.valueOf(8)),
 
                 Arguments.of("Main", new Ast.Source(
-                        Arrays.asList(),
-                        Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(
-                                new Ast.Stmt.Return(new Ast.Expr.Literal(BigInteger.ZERO)))
-                        ))
+                        List.of(),
+                        List.of(new Ast.Method("main", List.of(), List.of(
+                                new Ast.Stmt.Return(new Ast.Expr.Literal(BigInteger.ZERO))), null
+                        )), null
                 ), BigInteger.ZERO),
 
                 Arguments.of("Fields & No Return", new Ast.Source(
@@ -64,11 +64,11 @@ final class InterpreterTests {
                                 new Ast.Field("x", Optional.of(new Ast.Expr.Literal(BigInteger.ONE))),
                                 new Ast.Field("y", Optional.of(new Ast.Expr.Literal(BigInteger.TEN)))
                         ),
-                        Arrays.asList(new Ast.Method("main", Arrays.asList(), Arrays.asList(
+                        List.of(new Ast.Method("main", List.of(), List.of(
                                 new Ast.Stmt.Expression(new Ast.Expr.Binary("+",
                                         new Ast.Expr.Access(Optional.empty(), "x"),
                                         new Ast.Expr.Access(Optional.empty(), "y")))
-                        )))
+                        ), null)), null
                 ), Environment.NIL.getValue())
         );
     }
@@ -97,38 +97,44 @@ final class InterpreterTests {
     private static Stream<Arguments> testMethod() {
         return Stream.of(
                 Arguments.of("Main",
-                        new Ast.Method("main", Arrays.asList(), Arrays.asList(
-                                new Ast.Stmt.Return(new Ast.Expr.Literal(BigInteger.ZERO)))
+                        new Ast.Method("main", List.of(), List.of(
+                                new Ast.Stmt.Return(new Ast.Expr.Literal(BigInteger.ZERO))), null
                         ),
-                        Arrays.asList(),
+                        List.of(),
                         BigInteger.ZERO
                 ),
                 Arguments.of("Arguments",
-                        new Ast.Method("main", Arrays.asList("x"), Arrays.asList(
+                        new Ast.Method("main", List.of("x"), List.of(
                                 new Ast.Stmt.Return(new Ast.Expr.Binary("*",
                                         new Ast.Expr.Access(Optional.empty(), "x"),
                                         new Ast.Expr.Access(Optional.empty(), "x")
                                 ))
-                        )),
-                        Arrays.asList(Environment.create(BigInteger.TEN)),
+                        ), null),
+                        List.of(Environment.create(BigInteger.TEN)),
                         BigInteger.valueOf(100)
                 )
         );
     }
 
-    @Test
-    void testExpressionStatement() {
-        PrintStream sysout = System.out;
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-        try {
-            test(new Ast.Stmt.Expression(
-                    new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(new Ast.Expr.Literal("Hello, World!")))
-            ), Environment.NIL.getValue(), new Scope(null));
-            Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString());
-        } finally {
-            System.setOut(sysout);
-        }
+    private static Stream<Arguments> testIfStatement() {
+        return Stream.of(
+                Arguments.of("True Condition",
+                        new Ast.Stmt.If(
+                                new Ast.Expr.Literal(true),
+                                List.of(new Ast.Stmt.Assignment(new Ast.Expr.Access(Optional.empty(), "num"), new Ast.Expr.Literal(BigInteger.ONE))),
+                                List.of()
+                        ),
+                        BigInteger.ONE
+                ),
+                Arguments.of("False Condition",
+                        new Ast.Stmt.If(
+                                new Ast.Expr.Literal(false),
+                                List.of(),
+                                List.of(new Ast.Stmt.Assignment(new Ast.Expr.Access(Optional.empty(), "num"), new Ast.Expr.Literal(BigInteger.TEN)))
+                        ),
+                        BigInteger.TEN
+                )
+        );
     }
 
     @ParameterizedTest
@@ -184,25 +190,36 @@ final class InterpreterTests {
         Assertions.assertEquals(expected, scope.lookupVariable("num").getValue().getValue());
     }
 
-    private static Stream<Arguments> testIfStatement() {
+    private static Stream<Arguments> testFunctionExpression() {
         return Stream.of(
-                Arguments.of("True Condition",
-                        new Ast.Stmt.If(
-                                new Ast.Expr.Literal(true),
-                                Arrays.asList(new Ast.Stmt.Assignment(new Ast.Expr.Access(Optional.empty(), "num"), new Ast.Expr.Literal(BigInteger.ONE))),
-                                Arrays.asList()
-                        ),
-                        BigInteger.ONE
+                Arguments.of("Function",
+                        new Ast.Expr.Function(Optional.empty(), "function", List.of()),
+                        "function"
                 ),
-                Arguments.of("False Condition",
-                        new Ast.Stmt.If(
-                                new Ast.Expr.Literal(false),
-                                Arrays.asList(),
-                                Arrays.asList(new Ast.Stmt.Assignment(new Ast.Expr.Access(Optional.empty(), "num"), new Ast.Expr.Literal(BigInteger.TEN)))
-                        ),
-                        BigInteger.TEN
+                Arguments.of("Method",
+                        new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.empty(), "object")), "method", List.of()),
+                        "object.method"
+                ),
+                Arguments.of("Print",
+                        new Ast.Expr.Function(Optional.empty(), "print", List.of(new Ast.Expr.Literal("Hello, World!"))),
+                        Environment.NIL.getValue()
                 )
         );
+    }
+
+    @Test
+    void testExpressionStatement() {
+        PrintStream sysout = System.out;
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(out));
+        try {
+            test(new Ast.Stmt.Expression(
+                    new Ast.Expr.Function(Optional.empty(), "print", List.of(new Ast.Expr.Literal("Hello, World!")))
+            ), Environment.NIL.getValue(), new Scope(null));
+            Assertions.assertEquals("Hello, World!" + System.lineSeparator(), out.toString());
+        } finally {
+            System.setOut(sysout);
+        }
     }
 
     @Test
@@ -214,7 +231,7 @@ final class InterpreterTests {
                 .collect(Collectors.toList())));
         test(new Ast.Stmt.For("num",
                 new Ast.Expr.Access(Optional.empty(), "list"),
-                Arrays.asList(new Ast.Stmt.Assignment(
+                List.of(new Ast.Stmt.Assignment(
                         new Ast.Expr.Access(Optional.empty(), "sum"),
                         new Ast.Expr.Binary("+",
                                 new Ast.Expr.Access(Optional.empty(), "sum"),
@@ -223,26 +240,6 @@ final class InterpreterTests {
                 ))
         ), Environment.NIL.getValue(), scope);
         Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("sum").getValue().getValue());
-    }
-
-    @Test
-    void testWhileStatement() {
-        Scope scope = new Scope(null);
-        scope.defineVariable("num", Environment.create(BigInteger.ZERO));
-        test(new Ast.Stmt.While(
-                new Ast.Expr.Binary("<",
-                        new Ast.Expr.Access(Optional.empty(), "num"),
-                        new Ast.Expr.Literal(BigInteger.TEN)
-                ),
-                Arrays.asList(new Ast.Stmt.Assignment(
-                        new Ast.Expr.Access(Optional.empty(), "num"),
-                        new Ast.Expr.Binary("+",
-                                new Ast.Expr.Access(Optional.empty(), "num"),
-                                new Ast.Expr.Literal(BigInteger.ONE)
-                        )
-                ))
-        ), Environment.NIL.getValue(), scope);
-        Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("num").getValue().getValue());
     }
 
     @ParameterizedTest
@@ -372,32 +369,35 @@ final class InterpreterTests {
         );
     }
 
+    @Test
+    void testWhileStatement() {
+        Scope scope = new Scope(null);
+        scope.defineVariable("num", Environment.create(BigInteger.ZERO));
+        test(new Ast.Stmt.While(
+                new Ast.Expr.Binary("<",
+                        new Ast.Expr.Access(Optional.empty(), "num"),
+                        new Ast.Expr.Literal(BigInteger.TEN)
+                ),
+                List.of(new Ast.Stmt.Assignment(
+                        new Ast.Expr.Access(Optional.empty(), "num"),
+                        new Ast.Expr.Binary("+",
+                                new Ast.Expr.Access(Optional.empty(), "num"),
+                                new Ast.Expr.Literal(BigInteger.ONE)
+                        )
+                ))
+        ), Environment.NIL.getValue(), scope);
+        Assertions.assertEquals(BigInteger.TEN, scope.lookupVariable("num").getValue().getValue());
+    }
+
     @ParameterizedTest
     @MethodSource
     void testFunctionExpression(String test, Ast ast, Object expected) {
         Scope scope = new Scope(null);
         scope.defineFunction("function", 0, args -> Environment.create("function"));
         Scope object = new Scope(null);
-        object.defineFunction("method", 1, args -> Environment.create("object.method"));
+        object.defineFunction("method", 0, args -> Environment.create("object.method"));
         scope.defineVariable("object", new Environment.PlcObject(object, "object"));
         test(ast, expected, scope);
-    }
-
-    private static Stream<Arguments> testFunctionExpression() {
-        return Stream.of(
-                Arguments.of("Function",
-                        new Ast.Expr.Function(Optional.empty(), "function", Arrays.asList()),
-                        "function"
-                ),
-                Arguments.of("Method",
-                        new Ast.Expr.Function(Optional.of(new Ast.Expr.Access(Optional.empty(), "object")), "method", Arrays.asList()),
-                        "object.method"
-                ),
-                Arguments.of("Print",
-                        new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(new Ast.Expr.Literal("Hello, World!"))),
-                        Environment.NIL.getValue()
-                )
-        );
     }
 
     private static Scope test(Ast ast, Object expected, Scope scope) {

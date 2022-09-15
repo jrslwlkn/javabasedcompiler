@@ -37,7 +37,14 @@ public final class Environment {
 
     public static Type getType(String name) {
         if (!_types.containsKey(name)) {
-            throw new RuntimeException("Unknown type " + name + ".");
+            return new Type(name, name, null);
+        }
+        return _types.get(name);
+    }
+
+    public static Type getType(String name, Scope scope) {
+        if (!_types.containsKey(name)) {
+            return new Type(name, name, scope);
         }
         return _types.get(name);
     }
@@ -230,14 +237,14 @@ public final class Environment {
     public static final class Type {
 
         public static final Type ANY = new Type("Any", "Object", new Scope(null));
-        public static final Type NIL = new Type("Nil", "void", new Scope(ANY._scope));
-        public static final Type INTEGER_ITERABLE = new Type("IntegerIterable", "Iterable<Integer>", new Scope(ANY._scope));
-        public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY._scope));
-        public static final Type BOOLEAN = new Type("Boolean", "Boolean", new Scope(ANY._scope));
-        public static final Type INTEGER = new Type("Integer", "Integer", new Scope(COMPARABLE._scope));
-        public static final Type DECIMAL = new Type("Decimal", "Double", new Scope(COMPARABLE._scope));
-        public static final Type CHARACTER = new Type("Character", "Character", new Scope(COMPARABLE._scope));
-        public static final Type STRING = new Type("String", "String", new Scope(COMPARABLE._scope));
+        public static final Type NIL = new Type("Nil", "void", new Scope(ANY.getScope()));
+        public static final Type INTEGER_ITERABLE = new Type("IntegerIterable", "Iterable<Integer>", new Scope(ANY.getScope()));
+        public static final Type COMPARABLE = new Type("Comparable", "Comparable", new Scope(ANY.getScope()));
+        public static final Type BOOLEAN = new Type("Boolean", "Boolean", new Scope(ANY.getScope()));
+        public static final Type INTEGER = new Type("Integer", "Integer", new Scope(COMPARABLE.getScope()));
+        public static final Type DECIMAL = new Type("Decimal", "Double", new Scope(COMPARABLE.getScope()));
+        public static final Type CHARACTER = new Type("Character", "Character", new Scope(COMPARABLE.getScope()));
+        public static final Type STRING = new Type("String", "String", new Scope(COMPARABLE.getScope()));
 
         private final String _name;
         private final String _jvmName;
@@ -266,7 +273,7 @@ public final class Environment {
         }
 
         public Function getMethod(String name, int arity) {
-            return _scope.lookupFunction(name, arity + 1);
+            return _scope.lookupFunction(name, arity);
         }
 
         @Override

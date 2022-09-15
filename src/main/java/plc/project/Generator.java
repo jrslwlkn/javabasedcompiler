@@ -39,6 +39,11 @@ public final class Generator implements Ast.Visitor<Void> {
     public Void visit(Ast.Source ast) {
         _writer.write("public class Main {");
         newline(0);
+        _indent = 1;
+        for (Ast.Struct struct : ast.getStructs()) {
+            visit(struct);
+            newline(0);
+        }
 
         for (Ast.Field field : ast.getFields()) {
             newline(1);
@@ -67,6 +72,34 @@ public final class Generator implements Ast.Visitor<Void> {
         newline(0);
         _writer.write("}");
         _writer.flush();
+        return null;
+    }
+
+    @Override
+    public Void visit(Ast.Struct ast) {
+        newline(_indent);
+        _writer.write("class ");
+        _writer.write(ast.getName());
+        _writer.write(" {");
+
+        for (Ast.Field field : ast.getFields()) {
+            newline(_indent + 1);
+            visit(field);
+        }
+        newline(0);
+
+        newline(_indent + 1);
+        _writer.write("public " + ast.getName() + "() {}\n");
+
+        _indent++;
+        for (Ast.Method method : ast.getMethods()) {
+            visit(method);
+            newline(0);
+        }
+        _indent--;
+
+        indent();
+        _writer.write("}");
         return null;
     }
 
@@ -103,6 +136,12 @@ public final class Generator implements Ast.Visitor<Void> {
         }
 
         _writer.write(") {");
+        _indent++;
+        for (Ast.Struct s : ast.getStructs()) {
+            visit(s);
+        }
+        _indent--;
+
         visit(ast.getStatements());
         _writer.write("}");
         return null;
@@ -145,7 +184,7 @@ public final class Generator implements Ast.Visitor<Void> {
         if (ast.getValue().isPresent()) {
             _writer.write(" = ");
             visit(ast.getValue().get());
-        } else if (type.equals("String") || type.equals("Character")) {
+        } else if (!type.equals("Integer") && !type.equals("Decimal") && !type.equals("Boolean")) {
             _writer.write(" = new " + type + "()");
         }
 

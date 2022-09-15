@@ -10,6 +10,7 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -36,23 +37,23 @@ public class GeneratorTests {
                                 ),
 
                                 Arrays.asList(
-                                        init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
-                                                new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                        init(new Ast.Method("main", List.of(), List.of(), Optional.of("Integer"), Arrays.asList(
+                                                new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                                         init(new Ast.Expr.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
-                                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
                                                 new Ast.Stmt.Return(init(new Ast.Expr.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
-                                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))),
+                                        ), List.of()), ast -> ast.setFunction(new Environment.Function("main", "main", List.of(), Environment.Type.INTEGER, args -> Environment.NIL))),
 
                                         init(new Ast.Method(
                                                         "area",
 
                                                         //parameters
-                                                        Arrays.asList(
+                                                        List.of(
                                                                 "radius"
                                                         ),
 
                                                         // parameter type names
-                                                        Arrays.asList(
+                                                        List.of(
                                                                 "Decimal"
                                                         ),
 
@@ -60,7 +61,7 @@ public class GeneratorTests {
                                                         Optional.of("Decimal"),
 
                                                         // method statements
-                                                        Arrays.asList(
+                                                        List.of(
                                                                 new Ast.Stmt.Return(
                                                                         new Ast.Expr.Binary(
                                                                                 "*",
@@ -72,28 +73,31 @@ public class GeneratorTests {
                                                                                 init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.NIL)))
                                                                         )
                                                                 )
-                                                        )
+                                                        ),
+                                                        List.of()
+
                                                 ),
-                                                ast -> ast.setFunction(new Environment.Function("area", "area", Arrays.asList(Environment.Type.DECIMAL), Environment.Type.DECIMAL, args -> Environment.NIL)))
-                                )
+                                                ast -> ast.setFunction(new Environment.Function("area", "area", List.of(Environment.Type.DECIMAL), Environment.Type.DECIMAL, args -> Environment.NIL)))
+                                ),
+                                List.of()
                         ),
 
                         String.join(System.lineSeparator(),
                                 "public class Main {",
                                 "",
-                                "    int x;",
-                                "    int y = 10;",
+                                "    Integer x;",
+                                "    Integer y = 10;",
                                 "",
                                 "    public static void main(String[] args) {",
                                 "        System.exit(new Main().main());",
                                 "    }",
                                 "",
-                                "    int main() {",
+                                "    Integer main() {",
                                 "        System.out.println(\"Hello, World!\");",
                                 "        return 0;",
                                 "    }",
                                 "",
-                                "    double area(double radius) {",
+                                "    Double area(Double radius) {",
                                 "        return 3.14 * radius * radius;",
                                 "    }",
                                 "",
@@ -103,18 +107,18 @@ public class GeneratorTests {
 
                 Arguments.of("Hello, World!",
                         // DEF main(): Integer DO
-                        //     print("Hello, World!");
-                        //     RETURN 0;
+                        //     print("Hello, World!")
+                        //     RETURN 0
                         // END
                         new Ast.Source(
-                                Arrays.asList(),
-                                Arrays.asList(init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
-                                        new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                List.of(),
+                                List.of(init(new Ast.Method("main", List.of(), List.of(), Optional.of("Integer"), Arrays.asList(
+                                        new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                                 init(new Ast.Expr.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
-                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
+                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL)))),
                                         new Ast.Stmt.Return(init(new Ast.Expr.Literal(BigInteger.ZERO), ast -> ast.setType(Environment.Type.INTEGER)))
-                                )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL))))
-                        ),
+                                ), List.of()), ast -> ast.setFunction(new Environment.Function("main", "main", List.of(), Environment.Type.INTEGER, args -> Environment.NIL))))
+                                , List.of()),
                         String.join(System.lineSeparator(),
                                 "public class Main {",
                                 "",
@@ -122,7 +126,7 @@ public class GeneratorTests {
                                 "        System.exit(new Main().main());",
                                 "    }",
                                 "",
-                                "    int main() {",
+                                "    Integer main() {",
                                 "        System.out.println(\"Hello, World!\");",
                                 "        return 0;",
                                 "    }",
@@ -148,12 +152,12 @@ public class GeneratorTests {
                                         "area",
 
                                         //parameters
-                                        Arrays.asList(
+                                        List.of(
                                                 "radius"
                                         ),
 
                                         // parameter type names
-                                        Arrays.asList(
+                                        List.of(
                                                 "Decimal"
                                         ),
 
@@ -161,7 +165,7 @@ public class GeneratorTests {
                                         Optional.of("Decimal"),
 
                                         // method statements
-                                        Arrays.asList(
+                                        List.of(
                                                 new Ast.Stmt.Return(
                                                         new Ast.Expr.Binary(
                                                                 "*",
@@ -173,12 +177,13 @@ public class GeneratorTests {
                                                                 init(new Ast.Expr.Access(Optional.empty(), "radius"), ast -> ast.setVariable(new Environment.Variable("radius", "radius", Environment.Type.DECIMAL, Environment.NIL)))
                                                         )
                                                 )
-                                        )
+                                        ),
+                                        List.of()
                                 ),
-                                ast -> ast.setFunction(new Environment.Function("area", "area", Arrays.asList(Environment.Type.DECIMAL), Environment.Type.DECIMAL, args -> Environment.NIL))),
+                                ast -> ast.setFunction(new Environment.Function("area", "area", List.of(Environment.Type.DECIMAL), Environment.Type.DECIMAL, args -> Environment.NIL))),
 
                         String.join(System.lineSeparator(),
-                                "double area(double radius) {",
+                                "Double area(Double radius) {",
                                 "    return 3.14 * radius * radius;",
                                 "}"
                         )
@@ -189,8 +194,8 @@ public class GeneratorTests {
 
                         init(new Ast.Method(
                                         "method",
-                                        Arrays.asList(),
-                                        Arrays.asList(),
+                                        List.of(),
+                                        List.of(),
                                         Optional.empty(),
                                         Arrays.asList(
                                                 new Ast.Stmt.While(
@@ -198,7 +203,7 @@ public class GeneratorTests {
                                                         init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                                         // while statements
-                                                        Arrays.asList(
+                                                        List.of(
                                                                 new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))
                                                         )
                                                 ),
@@ -208,16 +213,17 @@ public class GeneratorTests {
                                                         init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                                         // while statements
-                                                        Arrays.asList(
+                                                        List.of(
                                                                 new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))
                                                         )
                                                 )
-                                        )
+                                        ),
+                                        List.of()
                                 ),
-                                ast -> ast.setFunction(new Environment.Function("method", "method", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL))),
+                                ast -> ast.setFunction(new Environment.Function("method", "method", List.of(), Environment.Type.NIL, args -> Environment.NIL))),
 
                         String.join(System.lineSeparator(),
-                                "Void method() {",
+                                "void method() {",
                                 "    while (expr) {",
                                 "        stmt;",
                                 "    }",
@@ -241,14 +247,14 @@ public class GeneratorTests {
                 Arguments.of("Declaration",
                         // LET name: Integer;
                         init(new Ast.Stmt.Declaration("name", Optional.of("Integer"), Optional.empty()), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.INTEGER, Environment.NIL))),
-                        "int name;"
+                        "Integer name;"
                 ),
                 Arguments.of("Initialization",
                         // LET name = 1.0;
                         init(new Ast.Stmt.Declaration("name", Optional.empty(), Optional.of(
                                 init(new Ast.Expr.Literal(new BigDecimal("1.0")), ast -> ast.setType(Environment.Type.DECIMAL))
                         )), ast -> ast.setVariable(new Environment.Variable("name", "name", Environment.Type.DECIMAL, Environment.NIL))),
-                        "double name = 1.0;"
+                        "Double name = 1.0;"
                 )
         );
     }
@@ -268,7 +274,7 @@ public class GeneratorTests {
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                 // while statements
-                                Arrays.asList()
+                                List.of()
                         ),
                         String.join(System.lineSeparator(),
                                 "while (expr) {}"
@@ -282,7 +288,7 @@ public class GeneratorTests {
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                 // while statements
-                                Arrays.asList(
+                                List.of(
                                         new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))
                                 )
                         ),
@@ -300,11 +306,11 @@ public class GeneratorTests {
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                 // while statements
-                                Arrays.asList(
+                                List.of(
                                         new Ast.Stmt.If(
                                                 init(new Ast.Expr.Access(Optional.empty(), "expr1"), ast -> ast.setVariable(new Environment.Variable("expr1", "expr1", Environment.Type.BOOLEAN, Environment.NIL))),
-                                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))),
-                                                Arrays.asList()
+                                                List.of(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))),
+                                                List.of()
                                         )
                                 )
                         ),
@@ -324,13 +330,13 @@ public class GeneratorTests {
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                 // while statements
-                                Arrays.asList(
+                                List.of(
                                         new Ast.Stmt.For(
                                                 "expr1",
 
                                                 init(new Ast.Expr.Access(Optional.empty(), "expr1"), ast -> ast.setVariable(new Environment.Variable("expr1", "expr1", Environment.Type.BOOLEAN, Environment.NIL))),
 
-                                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL)))))
+                                                List.of(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL)))))
                                         )
                                 )
                         ),
@@ -359,8 +365,8 @@ public class GeneratorTests {
                         // END
                         new Ast.Stmt.If(
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
-                                Arrays.asList(),
-                                Arrays.asList()
+                                List.of(),
+                                List.of()
                         ),
                         String.join(System.lineSeparator(),
                                 "if (expr) {}"
@@ -372,8 +378,8 @@ public class GeneratorTests {
                         // END
                         new Ast.Stmt.If(
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
-                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))),
-                                Arrays.asList()
+                                List.of(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL))))),
+                                List.of()
                         ),
                         String.join(System.lineSeparator(),
                                 "if (expr) {",
@@ -389,8 +395,8 @@ public class GeneratorTests {
                         // END
                         new Ast.Stmt.If(
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
-                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt1"), ast -> ast.setVariable(new Environment.Variable("stmt1", "stmt1", Environment.Type.NIL, Environment.NIL))))),
-                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt2"), ast -> ast.setVariable(new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, Environment.NIL)))))
+                                List.of(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt1"), ast -> ast.setVariable(new Environment.Variable("stmt1", "stmt1", Environment.Type.NIL, Environment.NIL))))),
+                                List.of(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt2"), ast -> ast.setVariable(new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, Environment.NIL)))))
                         ),
                         String.join(System.lineSeparator(),
                                 "if (expr) {",
@@ -403,16 +409,16 @@ public class GeneratorTests {
                 Arguments.of("If with While",
                         new Ast.Stmt.If(
                                 init(new Ast.Expr.Access(Optional.empty(), "expr"), ast -> ast.setVariable(new Environment.Variable("expr", "expr", Environment.Type.BOOLEAN, Environment.NIL))),
-                                Arrays.asList(
+                                List.of(
                                         new Ast.Stmt.While(
                                                 // condition
                                                 init(new Ast.Expr.Access(Optional.empty(), "expr1"), ast -> ast.setVariable(new Environment.Variable("expr1", "expr1", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                                 // while statements
-                                                Arrays.asList(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL)))))
+                                                List.of(new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt"), ast -> ast.setVariable(new Environment.Variable("stmt", "stmt", Environment.Type.NIL, Environment.NIL)))))
                                         )
                                 ),
-                                Arrays.asList()
+                                List.of()
                         ),
                         String.join(System.lineSeparator(),
                                 "if (expr) {",
@@ -449,19 +455,19 @@ public class GeneratorTests {
                                                                 init(new Ast.Expr.Access(Optional.empty(), "expr3"), ast -> ast.setVariable(new Environment.Variable("expr3", "expr3", Environment.Type.BOOLEAN, Environment.NIL))),
 
                                                                 // then statements
-                                                                Arrays.asList(
+                                                                List.of(
                                                                         // for loop
                                                                         new Ast.Stmt.For(
                                                                                 "expr4",
                                                                                 init(new Ast.Expr.Access(Optional.empty(), "expr4"), ast -> ast.setVariable(new Environment.Variable("expr4", "expr4", Environment.Type.BOOLEAN, Environment.NIL))),
-                                                                                Arrays.asList(
+                                                                                List.of(
                                                                                         new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt2"), ast -> ast.setVariable(new Environment.Variable("stmt2", "stmt2", Environment.Type.NIL, Environment.NIL))))
                                                                                 )
                                                                         )
                                                                 ),
 
                                                                 // else statements
-                                                                Arrays.asList()
+                                                                List.of()
                                                         )
                                                         , new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt11"), ast -> ast.setVariable(new Environment.Variable("stmt11", "stmt11", Environment.Type.NIL, Environment.NIL))))
                                                 )
@@ -491,7 +497,7 @@ public class GeneratorTests {
                                                                         new Ast.Stmt.For(
                                                                                 "expr7",
                                                                                 init(new Ast.Expr.Access(Optional.empty(), "expr7"), ast -> ast.setVariable(new Environment.Variable("expr7", "expr7", Environment.Type.BOOLEAN, Environment.NIL))),
-                                                                                Arrays.asList(
+                                                                                List.of(
                                                                                         new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt4"), ast -> ast.setVariable(new Environment.Variable("stmt4", "stmt4", Environment.Type.NIL, Environment.NIL))))
                                                                                 )
                                                                         ),
@@ -499,7 +505,7 @@ public class GeneratorTests {
                                                                 ),
 
                                                                 // else statements
-                                                                Arrays.asList(
+                                                                List.of(
                                                                         new Ast.Stmt.Expression(init(new Ast.Expr.Access(Optional.empty(), "stmt13"), ast -> ast.setVariable(new Environment.Variable("stmt13", "stmt13", Environment.Type.NIL, Environment.NIL))))
                                                                 )
                                                         ),
@@ -604,9 +610,9 @@ public class GeneratorTests {
         return Stream.of(
                 Arguments.of("Print",
                         // print("Hello, World!")
-                        init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                        init(new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                 init(new Ast.Expr.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
-                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))),
+                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))),
                         "System.out.println(\"Hello, World!\")"
                 ),
                 Arguments.of("String Slice",
@@ -621,7 +627,7 @@ public class GeneratorTests {
                 ),
                 Arguments.of("Empty Arguments",
                         // "slice()
-                        init(new Ast.Expr.Function(Optional.empty(), "slice", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("slice", "substring", Arrays.asList(Environment.Type.ANY, Environment.Type.INTEGER, Environment.Type.INTEGER), Environment.Type.NIL, args -> Environment.NIL))),
+                        init(new Ast.Expr.Function(Optional.empty(), "slice", List.of()), ast -> ast.setFunction(new Environment.Function("slice", "substring", Arrays.asList(Environment.Type.ANY, Environment.Type.INTEGER, Environment.Type.INTEGER), Environment.Type.NIL, args -> Environment.NIL))),
                         "substring()"
                 )
         );

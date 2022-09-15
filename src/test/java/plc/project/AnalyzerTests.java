@@ -7,7 +7,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -22,7 +22,7 @@ public final class AnalyzerTests {
 
     private static final Environment.Type OBJECT_TYPE = new Environment.Type("ObjectType", "ObjectType", init(new Scope(null), scope -> {
         scope.defineVariable("field", "field", Environment.Type.INTEGER, Environment.NIL);
-        scope.defineFunction("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER, args -> Environment.NIL);
+        scope.defineFunction("method", "method", List.of(), Environment.Type.INTEGER, args -> Environment.NIL);
     }));
 
     @ParameterizedTest(name = "{0}")
@@ -63,38 +63,39 @@ public final class AnalyzerTests {
         return Stream.of(
                 Arguments.of("No Explicit Return Type",
                         // DEF empty() DO END
-                        new Ast.Method("empty", Arrays.asList(), Arrays.asList(), Optional.empty(), Arrays.asList()),
+                        new Ast.Method("empty", List.of(), List.of(), Optional.empty(), List.of(), List.of()),
                         init(
                                 new Ast.Method(
                                         "empty",
-                                        Arrays.asList(),
-                                        Arrays.asList(),
+                                        List.of(),
+                                        List.of(),
                                         Optional.empty(),
-                                        Arrays.asList()),
-                                ast -> ast.setFunction(new Environment.Function("empty", "empty", Arrays.asList(), Environment.Type.NIL, args -> Environment.NIL))
+                                        List.of(),
+                                        List.of()),
+                                ast -> ast.setFunction(new Environment.Function("empty", "empty", List.of(), Environment.Type.NIL, args -> Environment.NIL))
                         )
                 ),
                 Arguments.of("Hello World",
-                        // DEF main(): Integer DO print("Hello, World!"); END
-                        new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
-                                new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                        // DEF main() DO print("Hello, World!"); END
+                        new Ast.Method("main", List.of(), List.of(), Optional.empty(), List.of(
+                                new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                         new Ast.Expr.Literal("Hello, World!")
                                 )))
-                        )),
-                        init(new Ast.Method("main", Arrays.asList(), Arrays.asList(), Optional.of("Integer"), Arrays.asList(
-                                new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                        ), List.of()),
+                        init(new Ast.Method("main", List.of(), List.of(), Optional.empty(), List.of(
+                                new Ast.Stmt.Expression(init(new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                         init(new Ast.Expr.Literal("Hello, World!"), ast -> ast.setType(Environment.Type.STRING))
-                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
-                        )), ast -> ast.setFunction(new Environment.Function("main", "main", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                                )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
+                        ), List.of()), ast -> ast.setFunction(new Environment.Function("main", "main", List.of(), Environment.Type.NIL, args -> Environment.NIL)))
                 ),
                 Arguments.of("Return Type Mismatch",
                         // DEF increment(num: Integer): Decimal DO RETURN num + 1; END
-                        new Ast.Method("increment", Arrays.asList("num"), Arrays.asList("Integer"), Optional.of("Decimal"), Arrays.asList(
+                        new Ast.Method("increment", List.of("num"), List.of("Integer"), Optional.of("Decimal"), List.of(
                                 new Ast.Stmt.Return(new Ast.Expr.Binary("+",
                                         new Ast.Expr.Access(Optional.empty(), "num"),
                                         new Ast.Expr.Literal(BigInteger.ONE)
                                 ))
-                        )),
+                        ), List.of()),
                         null
                 )
         );
@@ -129,12 +130,12 @@ public final class AnalyzerTests {
                         // LET name;
                         new Ast.Stmt.Declaration("name", Optional.empty(), Optional.empty()),
                         null
-                ),
-                Arguments.of("Unknown Type",
-                        // LET name: Unknown;
-                        new Ast.Stmt.Declaration("name", Optional.of("Unknown"), Optional.empty()),
-                        null
                 )
+//                Arguments.of("Unknown Type",
+//                        // LET name: Unknown;
+//                        new Ast.Stmt.Declaration("name", Optional.of("Unknown"), Optional.empty()),
+//                        null
+//                )
         );
     }
 
@@ -196,33 +197,33 @@ public final class AnalyzerTests {
                         // IF TRUE DO print(1); END
                         new Ast.Stmt.If(
                                 new Ast.Expr.Literal(Boolean.TRUE),
-                                Arrays.asList(new Ast.Stmt.Expression(
-                                        new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                List.of(new Ast.Stmt.Expression(
+                                        new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                                 new Ast.Expr.Literal(BigInteger.ONE)
                                         ))
                                 )),
-                                Arrays.asList()
+                                List.of()
                         ),
                         new Ast.Stmt.If(
                                 init(new Ast.Expr.Literal(Boolean.TRUE), ast -> ast.setType(Environment.Type.BOOLEAN)),
-                                Arrays.asList(new Ast.Stmt.Expression(
-                                        init(new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                List.of(new Ast.Stmt.Expression(
+                                        init(new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                                 init(new Ast.Expr.Literal(BigInteger.ONE), ast -> ast.setType(Environment.Type.INTEGER))
-                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", Arrays.asList(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
+                                        )), ast -> ast.setFunction(new Environment.Function("print", "System.out.println", List.of(Environment.Type.ANY), Environment.Type.NIL, args -> Environment.NIL))))
                                 ),
-                                Arrays.asList()
+                                List.of()
                         )
                 ),
                 Arguments.of("Invalid Condition",
                         // IF "FALSE" DO print(1); END
                         new Ast.Stmt.If(
                                 new Ast.Expr.Literal("FALSE"),
-                                Arrays.asList(new Ast.Stmt.Expression(
-                                        new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                List.of(new Ast.Stmt.Expression(
+                                        new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                                 new Ast.Expr.Literal(BigInteger.ONE)
                                         ))
                                 )),
-                                Arrays.asList()
+                                List.of()
                         ),
                         null
                 ),
@@ -230,12 +231,12 @@ public final class AnalyzerTests {
                         // IF TRUE DO print(9223372036854775807); END
                         new Ast.Stmt.If(
                                 new Ast.Expr.Literal(Boolean.TRUE),
-                                Arrays.asList(new Ast.Stmt.Expression(
-                                        new Ast.Expr.Function(Optional.empty(), "print", Arrays.asList(
+                                List.of(new Ast.Stmt.Expression(
+                                        new Ast.Expr.Function(Optional.empty(), "print", List.of(
                                                 new Ast.Expr.Literal(BigInteger.valueOf(Long.MAX_VALUE))
                                         ))
                                 )),
-                                Arrays.asList()
+                                List.of()
                         ),
                         null
                 ),
@@ -243,8 +244,8 @@ public final class AnalyzerTests {
                         // IF TRUE DO END
                         new Ast.Stmt.If(
                                 new Ast.Expr.Literal(Boolean.TRUE),
-                                Arrays.asList(),
-                                Arrays.asList()
+                                List.of(),
+                                List.of()
                         ),
                         null
                 )
@@ -365,32 +366,32 @@ public final class AnalyzerTests {
         );
     }
 
-    @ParameterizedTest(name = "{0}")
-    @MethodSource
-    public void testFunctionExpression(String test, Ast.Expr.Function ast, Ast.Expr.Function expected) {
-        test(ast, expected, init(new Scope(null), scope -> {
-            scope.defineFunction("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL);
-            scope.defineVariable("object", "object", OBJECT_TYPE, Environment.NIL);
-        }));
-    }
-
     private static Stream<Arguments> testFunctionExpression() {
         return Stream.of(
                 Arguments.of("Function",
                         // function()
-                        new Ast.Expr.Function(Optional.empty(), "function", Arrays.asList()),
-                        init(new Ast.Expr.Function(Optional.empty(), "function", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("function", "function", Arrays.asList(), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        new Ast.Expr.Function(Optional.empty(), "function", List.of()),
+                        init(new Ast.Expr.Function(Optional.empty(), "function", List.of()), ast -> ast.setFunction(new Environment.Function("function", "function", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 ),
                 Arguments.of("Method",
                         // object.method()
                         new Ast.Expr.Function(Optional.of(
                                 new Ast.Expr.Access(Optional.empty(), "object")
-                        ), "method", Arrays.asList()),
+                        ), "method", List.of()),
                         init(new Ast.Expr.Function(Optional.of(
                                 init(new Ast.Expr.Access(Optional.empty(), "object"), ast -> ast.setVariable(new Environment.Variable("object", "object", OBJECT_TYPE, Environment.NIL)))
-                        ), "method", Arrays.asList()), ast -> ast.setFunction(new Environment.Function("method", "method", Arrays.asList(Environment.Type.ANY), Environment.Type.INTEGER, args -> Environment.NIL)))
+                        ), "method", List.of()), ast -> ast.setFunction(new Environment.Function("method", "method", List.of(), Environment.Type.INTEGER, args -> Environment.NIL)))
                 )
         );
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource
+    public void testFunctionExpression(String test, Ast.Expr.Function ast, Ast.Expr.Function expected) {
+        test(ast, expected, init(new Scope(null), scope -> {
+            scope.defineFunction("function", "function", List.of(), Environment.Type.INTEGER, args -> Environment.NIL);
+            scope.defineVariable("object", "object", OBJECT_TYPE, Environment.NIL);
+        }));
     }
 
     @ParameterizedTest(name = "{0}")

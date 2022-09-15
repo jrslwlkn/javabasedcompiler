@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -59,7 +59,7 @@ public final class InterpreterBaselineTests {
             builder.append(args.get(0).getValue());
             return args.get(0);
         });
-        test(new Ast.Expr.Function(Optional.empty(), "log", Arrays.asList(
+        test(new Ast.Expr.Function(Optional.empty(), "log", List.of(
                 new Ast.Expr.Literal(BigInteger.ONE)
         )), BigInteger.ONE, scope);
         Assertions.assertEquals("1", builder.toString());
@@ -79,7 +79,7 @@ public final class InterpreterBaselineTests {
             builder.append(args.get(0).getValue());
             return args.get(0);
         });
-        test(new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "log", Arrays.asList(
+        test(new Ast.Stmt.Expression(new Ast.Expr.Function(Optional.empty(), "log", List.of(
                 new Ast.Expr.Literal(BigInteger.ONE)
         ))), Environment.NIL.getValue(), scope);
         Assertions.assertEquals("1", builder.toString());
@@ -93,7 +93,7 @@ public final class InterpreterBaselineTests {
     void testSourceInvokeMain() {
         Scope scope = new Scope(null);
         scope.defineFunction("main", 0, args -> Environment.create(BigInteger.ZERO));
-        test(new Ast.Source(Arrays.asList(), Arrays.asList()), BigInteger.ZERO, scope);
+        test(new Ast.Source(List.of(), List.of(), null), BigInteger.ZERO, scope);
     }
 
     private static void test(Ast ast, Object expected, Scope scope) {
